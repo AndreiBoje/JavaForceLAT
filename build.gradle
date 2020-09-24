@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+    id 'application'
+}
+
+group 'com.forcelat'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+javafx {
+    version='12'
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+application{
+    mainClassName = 'com.forcelat.Main'
+}
+run{
+    standardInput = System.in
+}
+
