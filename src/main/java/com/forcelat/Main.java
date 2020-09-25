@@ -38,52 +38,19 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         FNodeManager fnm = new FNodeManager(gc);
-        fnm.setBezierHeight(10);
+       //fnm.initListeners();
         fnm.setConnectionColor(Color.BLUE);
-
-
-        canvas.setOnMouseReleased(e -> {
-            //place
-            if (e.getButton() == MouseButton.PRIMARY && !isDragging) {
-                Point2D pos = new Point2D(e.getX(), e.getY());
-                int currID = fnm.addFNode(pos, 30, Color.BLUE);
-
-                if (fnm.getFNodeCount() > 1)
-                    fnm.addConnection(prevID.pop(), currID);
-
-                prevID.push(currID);
-                fnm.display();
-            }
-        });
-
-        canvas.setOnMousePressed(e -> {
-            isDragging = false;
-            selectedFNode = -1;
-        });
-
-        canvas.setOnMouseDragged(e -> {
-
-            //fnm.selectAndMove(pos);
-            isDragging = true;
-            //select nearest fnode and move it
-            if (e.getButton() == MouseButton.PRIMARY) {
-                Point2D pos = new Point2D(e.getX(), e.getY());
-
-                if (selectedFNode == -1)
-                    selectedFNode = fnm.getFNodeInRange(pos, 30);
-                if (selectedFNode != -1)
-                    fnm.moveFNodeTo(selectedFNode, pos);
-                fnm.display();
-            }
-        });
+        int id1 = fnm.addFNode(new Point2D(400,80),30,Color.RED);
+        int id2 = fnm.addFNode(new Point2D(300,480),30,Color.RED);
+        int id3 = fnm.addFNode(new Point2D(700,180),30,Color.RED);
+        int id4 = fnm.addFNode(new Point2D(200,180),30,Color.RED);
+        fnm.addConnection(id1,id2);
+        fnm.addConnection(id2,id1);
+        fnm.addConnection(id3,id3);
+        fnm.display();
 
         StackPane sp = new StackPane(canvas);
         Scene scene = new Scene(sp, width, height);
-
-
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, (key) -> {
-            //
-        });
 
         window.setScene(scene);
         window.setTitle("NFA");
