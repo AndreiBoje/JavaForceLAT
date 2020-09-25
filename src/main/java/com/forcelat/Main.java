@@ -30,6 +30,7 @@ public class Main extends Application {
     public void start(Stage window) throws Exception {
         double width = 900;
         double height = 600;
+        HashSet<KeyCode> kb = new HashSet<>();
 
         Canvas canvas = new Canvas(width, height);
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -56,6 +57,7 @@ public class Main extends Application {
         Scene scene = new Scene(sp, width, height);
         //canvas.addEventFilter(MouseEvent.MOUSE_CLICKED, (e) -> canvas.requestFocus());
         //canvas.addEventFilter(MouseEvent.MOUSE_DRAGGED, (e) -> canvas.requestFocus());
+
 
         window.setScene(scene);
         window.setTitle("NFA");

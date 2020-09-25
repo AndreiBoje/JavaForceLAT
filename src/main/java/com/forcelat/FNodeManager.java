@@ -3,14 +3,13 @@ package com.forcelat;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Stack;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class FNodeManager {
@@ -36,9 +35,10 @@ public class FNodeManager {
     private double arrowWidth = 10f;
     private int IDGiver = 0;
     private int selectedFNode = -1;
+    private int focusFNode = -1;
     private Color selectedColor = Color.GREEN;
-    private boolean isDragging = false;
     private int prevID;
+    private int fromFNodeID = -1, toFNodeID = -1;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
 
     public FNodeManager(GraphicsContext gc) {
@@ -48,54 +48,48 @@ public class FNodeManager {
     public void initListeners() {
         Canvas canvas = gc.getCanvas();
         canvas.setFocusTraversable(true);
-        //A + LMB -> place node
-        //A + RMB -> delete node
+        //CTRL + LMB -> place node
+        //CTRL + RMB -> delete node
         //LMB Drag -> move node around
         //S + LMB -> select node
 
-        canvas.setOnKeyPressed(e->{
-            //canvas.requestFocus();
-            System.out.println(e.getCode().getCode());
-        });
+        //TODO: select From and To Nodes
 
         //Place/Remove FNode
-        canvas.setOnMouseReleased(e -> {
-            //TODO: If node in range,select it else place new node there
+        canvas.setOnMousePressed(e -> {
+            //TODO: Maybe double clicking?
             Point2D pos = new Point2D(e.getX(), e.getY());
-            //Place
-            if (e.getButton() == MouseButton.PRIMARY && !isDragging) {
-                int currID = addFNode(pos, 30, Color.RED);
+            if (e.getButton() == MouseButton.PRIMARY && e.isControlDown()) {
 
-               // System.out.println(e.getClickCount());
+                //if node not found at mouse pos,generate one
+                int currID = getFNodeInRange(pos, 30);
+                if (currID == -1)
+                    currID = addFNode(pos, 30, Color.RED);
 
-                if (FNodeMap.size() > 1)
-                    addConnection(prevID, currID);
+                if (fromFNodeID != -1)
+                    addConnection(fromFNodeID, currID);
 
                 prevID = currID;
             }
-            //Remove
-            if (e.getButton() == MouseButton.SECONDARY && !isDragging) {
-                int id = getFNodeInRange(pos, 30);
-                deleteFNode(id);
+            //select start node
+            if (e.getButton() == MouseButton.PRIMARY) {
+                fromFNodeID = getFNodeInRange(pos, 30);
             }
+
             display();
         });
-        //Drag FNode
         canvas.setOnMouseDragged(e -> {
-            //TODO: Mark found node as selected (if any)
-            isDragging = true;
             if (e.getButton() == MouseButton.PRIMARY) {
                 Point2D scanPos = new Point2D(e.getX(), e.getY());
                 selectAndMove(scanPos, 30);
                 display();
             }
+        });
 
+        canvas.setOnMouseReleased(e -> {
+            resetDragSelection();
         });
-        //Reset dragging & Selected node
-        canvas.setOnMousePressed(e -> {
-            isDragging = false;
-            resetSelection();
-        });
+
     }
 
     public int addFNode(Point2D centerPos, double radius, Color color) {
@@ -113,7 +107,7 @@ public class FNodeManager {
             moveFNodeTo(selectedFNode, scanPos);
     }
 
-    private void resetSelection() {
+    private void resetDragSelection() {
         selectedFNode = -1;
     }
 
@@ -195,96 +189,12 @@ public class FNodeManager {
             gc.setLineWidth(5);
             gc.strokeOval(x - radius, y - radius, radius * 2, radius * 2);
 
-            if (selectedFNode == fn.ID) {
+            if (fromFNodeID == fn.ID) {
                 gc.setFill(selectedColor);
                 double selRadius = fn.radius * 0.8f;
-                gc.fillOval(x-selRadius, y-selRadius, selRadius * 2, selRadius * 2);
+                gc.fillOval(x - selRadius, y - selRadius, selRadius * 2, selRadius * 2);
             }
         }
-    }
-
-    private void connectFNodeIDs2(int fromID, int toID) {
-        //if (index1 < 0 || index1 > FNodeList.size() || index2 < 0 || index2 > FNodeList.size()) return false;
-
-        FNode fn1 = FNodeMap.get(toID);
-        FNode fn2 = FNodeMap.get(fromID);
-
-        boolean fromHasPointingArrow = fn1.connIDList.contains(fn2.ID);
-
-        double distanceX = fn2.centerPos.getX() - fn1.centerPos.getX();
-        double distanceY = fn2.centerPos.getY() - fn1.centerPos.getY();
-        double angleStart;
-        double angleEnd;
-
-        if (fromHasPointingArrow) {
-            angleEnd = (Math.atan2(distanceY, distanceX) + Math.PI / 6);
-            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI);
-        } else {
-            angleEnd = (Math.atan2(distanceY, distanceX));
-            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI);
-        }
-
-        double xStart = Math.cos(angleStart) * fn2.radius + fn2.centerPos.getX();
-        double yStart = Math.sin(angleStart) * fn2.radius + fn2.centerPos.getY();
-
-        double xEnd = Math.cos(angleEnd) * fn1.radius + fn1.centerPos.getX();
-        double yEnd = Math.sin(angleEnd) * fn1.radius + fn1.centerPos.getY();
-
-        double xEndExt = Math.cos(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
-        double yEndExt = Math.sin(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
-
-
-        //bezier
-        Point2D midPoint = new Point2D((xStart + xEndExt) / 2, (yStart + yEndExt) / 2);
-        double angleBezier;
-
-        if (fromHasPointingArrow) {
-            angleBezier = angleEnd + Math.PI / 2;
-        } else {
-            angleBezier = angleEnd - Math.PI / 2;
-        }
-
-        double xControl = Math.cos(angleBezier) * 30 + midPoint.getX();
-        double yControl = Math.sin(angleBezier) * 30 + midPoint.getY();
-
-        Point2D[] bezierPoints = new Point2D[20];
-        double t = 0;
-        double tStep = 1f / (20 - 1);
-
-        for (int i = 0; i < 20; i++) {
-            double x0 = t * xStart + (1 - t) * xControl;
-            double y0 = t * yStart + (1 - t) * yControl;
-
-            double x2 = t * xControl + (1 - t) * xEndExt;
-            double y2 = t * yControl + (1 - t) * yEndExt;
-
-            double x = t * x0 + (1 - t) * x2;
-            double y = t * y0 + (1 - t) * y2;
-            bezierPoints[i] = new Point2D(x, y);
-            t += tStep;
-        }
-
-        gc.beginPath();
-        gc.setStroke(connectionColor);
-        gc.setLineWidth(3);
-        gc.stroke();
-        for (int i = 0; i < 20; i++) {
-            double x = bezierPoints[i].getX();
-            double y = bezierPoints[i].getY();
-            gc.lineTo(x, y);
-            gc.stroke();
-        }
-        gc.closePath();
-
-        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2) * arrowWidth + xEndExt;
-        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2) * arrowWidth + yEndExt;
-        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2) * arrowWidth + xEndExt;
-        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2) * arrowWidth + yEndExt;
-
-
-        gc.setFill(connectionColor);
-        gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xEnd},
-                new double[]{yArrowLine1, yArrowLine2, yEnd}, 3);
 
     }
 
