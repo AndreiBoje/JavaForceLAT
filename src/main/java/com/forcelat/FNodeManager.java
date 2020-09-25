@@ -31,14 +31,13 @@ public class FNodeManager {
 
     private GraphicsContext gc;
     private Color connectionColor = Color.RED;
-    private double arrowExtendFactor = 1.5f; //how far from edge should arrow start
-    private double arrowWidth = 10f;
+    private double arrowExtendFactor = 1.3f; //how far from edge should arrow start
+    private double arrowWidth = 7f;
     private int IDGiver = 0;
     private int selectedFNode = -1;
-    private int focusFNode = -1;
     private Color selectedColor = Color.GREEN;
     private int prevID;
-    private int fromFNodeID = -1, toFNodeID = -1;
+    private int fromFNodeID = -1;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
 
     public FNodeManager(GraphicsContext gc) {
@@ -71,7 +70,11 @@ public class FNodeManager {
 
                 prevID = currID;
             }
-            //select start node
+            if (e.getButton() == MouseButton.SECONDARY && e.isControlDown()) {
+                int fn = getFNodeInRange(pos, 30);
+                deleteFNode(fn);
+            }
+            //select focus node
             if (e.getButton() == MouseButton.PRIMARY) {
                 fromFNodeID = getFNodeInRange(pos, 30);
             }
@@ -120,7 +123,6 @@ public class FNodeManager {
         for (FNode fn : FNodeMap.values()) {
             fn.connIDList = fn.connIDList.stream().filter(e -> e != nodeID).collect(Collectors.toCollection(ArrayList::new));
         }
-        System.out.println(FNodeMap.size());
     }
 
     private void moveFNodeTo(int ID, Point2D pos) {
@@ -142,23 +144,6 @@ public class FNodeManager {
             }
         }
 
-        return shortestID;
-    }
-
-    private int getNearestFNode(Point2D pos) {
-        double shortestDist = 9999;
-        int shortestID = -1;
-
-        for (Integer fnID : FNodeMap.keySet()) {
-            FNode fn = FNodeMap.get(fnID);
-            Point2D fn_pos = new Point2D(fn.centerPos.getX(), fn.centerPos.getY());
-            double dist = fn_pos.distance(pos);
-
-            if (dist < shortestDist) {
-                shortestDist = dist;
-                shortestID = fnID;
-            }
-        }
         return shortestID;
     }
 
@@ -208,7 +193,7 @@ public class FNodeManager {
         double distanceY = fn2.centerPos.getY() - fn1.centerPos.getY();
         double angleEnd;
         double angleStart;
-        double approachAngle = Math.PI / 10;
+        double approachAngle = Math.PI / 20;
 
         //points to self
         if (fromID == toID) {
@@ -236,7 +221,7 @@ public class FNodeManager {
 
             gc.beginPath();
             gc.setStroke(connectionColor);
-            gc.setLineWidth(3);
+            gc.setLineWidth(2.3);
             gc.stroke();
             for (int i = 0; i < 20; i++) {
                 double x = bezierPoints[i].getX();
@@ -257,6 +242,7 @@ public class FNodeManager {
             double yArrowRight = Math.sin(angle * 2 - Math.PI / 2) * arrowWidth + yArrowBase;
 
             gc.setFill(connectionColor);
+            //gc.setFill(Color.BLACK);
             gc.fillPolygon(new double[]{xLBase, xArrowLeft, xArrowRight},
                     new double[]{yLBase, yArrowLeft, yArrowRight}, 3);
             return;
@@ -275,31 +261,47 @@ public class FNodeManager {
 
         double f = fromHasPointingArrow ? 1 : 0;
 
-        double xStart = Math.cos(angleStart) * fn2.radius + fn2.centerPos.getX();
-        double yStart = Math.sin(angleStart) * fn2.radius + fn2.centerPos.getY();
+        double xStart = Math.cos(angleStart-approachAngle*f) * fn2.radius + fn2.centerPos.getX();
+        double yStart = Math.sin(angleStart-approachAngle*f) * fn2.radius + fn2.centerPos.getY();
 
-        double xEndExt = Math.cos(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
+        double xEndExt = Math.cos(angleEnd ) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
         double yEndExt = Math.sin(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
 
-        double xEndRot = Math.cos(angleEnd + (approachAngle - Math.PI / 20) * f) * fn1.radius + fn1.centerPos.getX();
-        double yEndRot = Math.sin(angleEnd + (approachAngle - Math.PI / 20) * f) * fn1.radius + fn1.centerPos.getY();
+        double xEndRot = Math.cos(angleEnd + approachAngle  * f) * fn1.radius + fn1.centerPos.getX();
+        double yEndRot = Math.sin(angleEnd + approachAngle  * f) * fn1.radius + fn1.centerPos.getY();
+
+        double xMid = (xStart+xEndRot)*0.5;
+        double yMid = (yStart+yEndRot)*0.5;
+
+        double xAdv = Math.cos(angleStart)*10 + xMid;
+        double yAdv = Math.sin(angleStart)*10 + yMid ;
 
         gc.beginPath();
         gc.setStroke(connectionColor);
-        gc.setLineWidth(3);
+        gc.setLineWidth(2.3);
         gc.stroke();
         gc.moveTo(xStart, yStart);
-        gc.lineTo(xEndExt, yEndExt);
+        gc.lineTo(xEndRot, yEndRot);
         gc.stroke();
 
-        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + xEndExt;
-        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + yEndExt;
-        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + xEndExt;
-        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + yEndExt;
+
+
+        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + xMid;
+        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + yMid;
+        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + xMid;
+        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + yMid;
+
+        /*gc.setFill(Color.BLACK);
+        gc.fillOval(xMid-1,yMid-1,2,2);
+        gc.fillOval(xAdv-1,yAdv-1,2,2);
+        gc.fillOval(xArrowLine1-1,yArrowLine1-1,2,2);
+        gc.fillOval(xArrowLine2-1,yArrowLine2-1,2,2);*/
+
 
         gc.setFill(connectionColor);
-        gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xEndRot},
-                new double[]{yArrowLine1, yArrowLine2, yEndRot}, 3);
+        //gc.setFill(Color.BLACK);
+        gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xAdv},
+                new double[]{yArrowLine1, yArrowLine2, yAdv}, 3);
     }
 
     //GS
