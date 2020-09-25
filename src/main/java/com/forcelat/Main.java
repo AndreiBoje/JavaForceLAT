@@ -24,11 +24,6 @@ public class Main extends Application {
     }
 
 
-    Stack<Integer> prevID = new Stack<>();
-
-    boolean isDragging = false;
-    int selectedFNode = -1;
-
     @Override
     public void start(Stage window) throws Exception {
         double width = 900;
@@ -38,15 +33,15 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         FNodeManager fnm = new FNodeManager(gc);
-       //fnm.initListeners();
-        fnm.setConnectionColor(Color.BLUE);
-        int id1 = fnm.addFNode(new Point2D(400,80),30,Color.RED);
-        int id2 = fnm.addFNode(new Point2D(300,480),30,Color.RED);
-        int id3 = fnm.addFNode(new Point2D(700,180),30,Color.RED);
-        int id4 = fnm.addFNode(new Point2D(200,180),30,Color.RED);
+        fnm.initListeners();
+        fnm.setConnectionColor(Color.RED);
+        int id1 = fnm.addFNode(new Point2D(100,280),30,Color.RED);
+        int id2 = fnm.addFNode(new Point2D(600,480),30,Color.RED);
+
         fnm.addConnection(id1,id2);
+        fnm.addConnection(id1,id1);
+        fnm.addConnection(id2,id2);
         fnm.addConnection(id2,id1);
-        fnm.addConnection(id3,id3);
         fnm.display();
 
         StackPane sp = new StackPane(canvas);

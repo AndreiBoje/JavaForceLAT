@@ -37,11 +37,8 @@ public class FNodeManager {
     private int IDGiver = 0;
     private int selectedFNode = -1;
     private boolean isDragging = false;
-    //TODO: Implement selection here,not in main program;
-
+    private int prevID;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
-
-    Stack<Integer> prevID = new Stack<>();
 
     public FNodeManager(GraphicsContext gc) {
         this.gc = gc;
@@ -51,15 +48,16 @@ public class FNodeManager {
         Canvas canvas = gc.getCanvas();
         //Place/Remove FNode
         canvas.setOnMouseReleased(e -> {
+            //TODO: If node in range,select it else place new node there
             Point2D pos = new Point2D(e.getX(), e.getY());
             //Place
             if (e.getButton() == MouseButton.PRIMARY && !isDragging) {
-                int currID = addFNode(pos, 30, Color.BLUE);
+                int currID = addFNode(pos, 30, Color.RED);
 
                 if (FNodeMap.size() > 1)
-                    addConnection(prevID.pop(), currID);
+                    addConnection(prevID, currID);
 
-                prevID.push(currID);
+                prevID=currID;
             }
             //Remove
             if (e.getButton() == MouseButton.SECONDARY && !isDragging) {
@@ -68,7 +66,7 @@ public class FNodeManager {
             }
             display();
         });
-        //Drag Fnode //TODO: made "range" modular
+        //Drag Fnode
         canvas.setOnMouseDragged(e -> {
             isDragging = true;
             if (e.getButton() == MouseButton.PRIMARY) {
@@ -78,7 +76,7 @@ public class FNodeManager {
             }
 
         });
-        //Reset dragging
+        //Reset dragging & Selected node
         canvas.setOnMousePressed(e -> {
             isDragging = false;
             resetSelection();
@@ -86,6 +84,8 @@ public class FNodeManager {
     }
 
     public int addFNode(Point2D centerPos, double radius, Color color) {
+
+        prevID=IDGiver-1;
         FNode fn = new FNode(centerPos, radius, color, IDGiver);
         FNodeMap.put(IDGiver, fn);
         return IDGiver++;
@@ -169,7 +169,8 @@ public class FNodeManager {
             for (Integer connID : fn.connIDList) {
                 connectFNodeIDs(fn.ID, connID);
             }
-
+        }
+        for (FNode fn : FNodeMap.values()) {
             //draw every node
             double x = fn.centerPos.getX() - fn.radius;
             double y = fn.centerPos.getY() - fn.radius;
@@ -177,12 +178,9 @@ public class FNodeManager {
             gc.setStroke(fn.color);
             gc.setLineWidth(5);
             gc.strokeOval(x, y, radius * 2, radius * 2);
-
         }
     }
 
-    //TODO: Handle self connection
-    //TODO: Handle out of bounds indexes
     private void connectFNodeIDs2(int fromID, int toID) {
         //if (index1 < 0 || index1 > FNodeList.size() || index2 < 0 || index2 > FNodeList.size()) return false;
 
@@ -269,53 +267,37 @@ public class FNodeManager {
     }
 
     private void connectFNodeIDs(int fromID, int toID) {
-//        if (index1 < 0 || index1 > FNodeList.size() || index2 < 0 || index2 > FNodeList.size()) return false;
         FNode fn1 = FNodeMap.get(toID);
         FNode fn2 = FNodeMap.get(fromID);
 
         boolean fromHasPointingArrow = fn1.connIDList.contains(fn2.ID);
-        boolean fromPointsToSelf = fn1.connIDList.contains(fn1.ID);
 
         double distanceX = fn2.centerPos.getX() - fn1.centerPos.getX();
         double distanceY = fn2.centerPos.getY() - fn1.centerPos.getY();
         double angleEnd;
         double angleStart;
+        double approachAngle = Math.PI / 10;
 
-        if (fromHasPointingArrow) {
-            angleEnd = (Math.atan2(distanceY, distanceX) + Math.PI / 6);
-            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI - Math.PI / 6);
-        } else {
-            angleEnd = (Math.atan2(distanceY, distanceX));
-            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI);
-        }
-
-        if (fromPointsToSelf) {
-            //TODO: 4 Point bezier arrow to itself,accordingly rotated arrow tip
-            //bezier
+        //points to self
+        if (fromID == toID) {
             int bezierPointsCount = 20;
             Point2D basePoint = new Point2D(fn1.centerPos.getX(), fn1.centerPos.getY() - fn1.radius);
             Point2D cp1 = new Point2D(basePoint.getX() + fn1.radius * 2, basePoint.getY() - fn1.radius * 2);
             Point2D cp2 = new Point2D(basePoint.getX() - fn1.radius * 2, basePoint.getY() - fn1.radius * 2);
 
-            double angle = -Math.PI/3;
-            double x0 = Math.cos(angle)* fn2.radius+fn1.centerPos.getX();
-            double y0 = Math.sin(angle)* fn2.radius+fn1.centerPos.getY();
-
-            gc.setFill(Color.GREEN);
-            gc.fillOval(cp1.getX() - 5, cp1.getY() - 5, 10, 10);
-            gc.fillOval(x0 - 5, y0 - 5, 10, 10);
-
-            //gc.fillOval(cp1.getX() - 5, cp1.getY() - 5, 10, 10);
-            //gc.fillOval(cp2.getX() - 5, cp2.getY() - 5, 10, 10);
-            //gc.fillOval(arrowTip.getX() - 5, arrowTip.getY() - 5, 10, 10);
+            double angle = -Math.PI / 3;
+            double xRBase = Math.cos(angle) * fn1.radius + fn1.centerPos.getX();
+            double yRBase = Math.sin(angle) * fn1.radius + fn1.centerPos.getY();
+            double xLBase = Math.cos(angle * 2) * fn1.radius + fn1.centerPos.getX();
+            double yLBase = Math.sin(angle * 2) * fn1.radius + fn1.centerPos.getY();
 
             Point2D[] bezierPoints = new Point2D[bezierPointsCount];
             double t = 0;
             double tStep = 1f / (bezierPointsCount - 1);
 
             for (int i = 0; i < bezierPointsCount; i++) {
-                double x = Math.pow((1 - t), 3) * basePoint.getX() + 3 * Math.pow((1 - t), 2) * t * cp1.getX() + 3 * (1 - t) * t * t * cp2.getX() + t * t * t * basePoint.getX();
-                double y = Math.pow((1 - t), 3) * basePoint.getY() + 3 * Math.pow((1 - t), 2) * t * cp1.getY() + 3 * (1 - t) * t * t * cp2.getY() + t * t * t * basePoint.getY();
+                double x = Math.pow((1 - t), 3) * xRBase + 3 * Math.pow((1 - t), 2) * t * cp1.getX() + 3 * (1 - t) * t * t * cp2.getX() + t * t * t * xLBase;
+                double y = Math.pow((1 - t), 3) * yRBase + 3 * Math.pow((1 - t), 2) * t * cp1.getY() + 3 * (1 - t) * t * t * cp2.getY() + t * t * t * yLBase;
                 bezierPoints[i] = new Point2D(x, y);
                 t += tStep;
             }
@@ -333,25 +315,42 @@ public class FNodeManager {
             gc.closePath();
 
             //arrow
-            Point2D arrowBasePoint = new Point2D(fn1.centerPos.getX(), fn1.centerPos.getY() - fn1.radius * arrowExtendFactor);
-            Point2D arrowPoint1 = new Point2D(arrowBasePoint.getX() - arrowWidth, arrowBasePoint.getY());
-            Point2D arrowPoint2 = new Point2D(arrowBasePoint.getX() + arrowWidth, arrowBasePoint.getY());
+            double xArrowBase = Math.cos(angle * 2) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
+            double yArrowBase = Math.sin(angle * 2) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
+
+            double xArrowLeft = Math.cos(angle * 2 + Math.PI / 2) * arrowWidth + xArrowBase;
+            double yArrowLeft = Math.sin(angle * 2 + Math.PI / 2) * arrowWidth + yArrowBase;
+
+            double xArrowRight = Math.cos(angle * 2 - Math.PI / 2) * arrowWidth + xArrowBase;
+            double yArrowRight = Math.sin(angle * 2 - Math.PI / 2) * arrowWidth + yArrowBase;
 
             gc.setFill(connectionColor);
-            //gc.fillPolygon(new double[]{arrowPoint1.getX(), arrowPoint2.getX(), arrowTip.getX()},
-              //      new double[]{arrowPoint1.getY(), arrowPoint2.getY(), arrowTip.getY()}, 3);
+            gc.fillPolygon(new double[]{xLBase, xArrowLeft, xArrowRight},
+                    new double[]{yLBase, yArrowLeft, yArrowRight}, 3);
             return;
         }
+
+        //points to another already
+        if (fromHasPointingArrow) {
+            angleEnd = (Math.atan2(distanceY, distanceX) + approachAngle);
+            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI - approachAngle);
+        }
+        //"new" pointing
+        else {
+            angleEnd = (Math.atan2(distanceY, distanceX));
+            angleStart = (Math.atan2(distanceY, distanceX) - Math.PI);
+        }
+
+        double f = fromHasPointingArrow ?  1: 0;
 
         double xStart = Math.cos(angleStart) * fn2.radius + fn2.centerPos.getX();
         double yStart = Math.sin(angleStart) * fn2.radius + fn2.centerPos.getY();
 
-        double xEnd = Math.cos(angleEnd) * fn1.radius + fn1.centerPos.getX();
-        double yEnd = Math.sin(angleEnd) * fn1.radius + fn1.centerPos.getY();
-
         double xEndExt = Math.cos(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
         double yEndExt = Math.sin(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
 
+        double xEndRot = Math.cos(angleEnd + (approachAngle - Math.PI/20)*f) * fn1.radius + fn1.centerPos.getX();
+        double yEndRot = Math.sin(angleEnd + (approachAngle - Math.PI/20)*f) * fn1.radius + fn1.centerPos.getY();
 
         gc.beginPath();
         gc.setStroke(connectionColor);
@@ -361,15 +360,14 @@ public class FNodeManager {
         gc.lineTo(xEndExt, yEndExt);
         gc.stroke();
 
-        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2) * arrowWidth + xEndExt;
-        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2) * arrowWidth + yEndExt;
-        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2) * arrowWidth + xEndExt;
-        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2) * arrowWidth + yEndExt;
-
+        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle*f) * arrowWidth + xEndExt;
+        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle*f) * arrowWidth + yEndExt;
+        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle*f) * arrowWidth + xEndExt;
+        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle*f) * arrowWidth + yEndExt;
 
         gc.setFill(connectionColor);
-        gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xEnd},
-                new double[]{yArrowLine1, yArrowLine2, yEnd}, 3);
+        gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xEndRot},
+                new double[]{yArrowLine1, yArrowLine2, yEndRot}, 3);
     }
 
     //GS
