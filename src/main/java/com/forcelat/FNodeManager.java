@@ -36,6 +36,7 @@ public class FNodeManager {
     private double arrowWidth = 10f;
     private int IDGiver = 0;
     private int selectedFNode = -1;
+    private Color selectedColor = Color.GREEN;
     private boolean isDragging = false;
     private int prevID;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
@@ -46,6 +47,17 @@ public class FNodeManager {
 
     public void initListeners() {
         Canvas canvas = gc.getCanvas();
+        canvas.setFocusTraversable(true);
+        //A + LMB -> place node
+        //A + RMB -> delete node
+        //LMB Drag -> move node around
+        //S + LMB -> select node
+
+        canvas.setOnKeyPressed(e->{
+            //canvas.requestFocus();
+            System.out.println(e.getCode().getCode());
+        });
+
         //Place/Remove FNode
         canvas.setOnMouseReleased(e -> {
             //TODO: If node in range,select it else place new node there
@@ -54,10 +66,12 @@ public class FNodeManager {
             if (e.getButton() == MouseButton.PRIMARY && !isDragging) {
                 int currID = addFNode(pos, 30, Color.RED);
 
+               // System.out.println(e.getClickCount());
+
                 if (FNodeMap.size() > 1)
                     addConnection(prevID, currID);
 
-                prevID=currID;
+                prevID = currID;
             }
             //Remove
             if (e.getButton() == MouseButton.SECONDARY && !isDragging) {
@@ -66,8 +80,9 @@ public class FNodeManager {
             }
             display();
         });
-        //Drag Fnode
+        //Drag FNode
         canvas.setOnMouseDragged(e -> {
+            //TODO: Mark found node as selected (if any)
             isDragging = true;
             if (e.getButton() == MouseButton.PRIMARY) {
                 Point2D scanPos = new Point2D(e.getX(), e.getY());
@@ -85,7 +100,7 @@ public class FNodeManager {
 
     public int addFNode(Point2D centerPos, double radius, Color color) {
 
-        prevID=IDGiver-1;
+        prevID = IDGiver - 1;
         FNode fn = new FNode(centerPos, radius, color, IDGiver);
         FNodeMap.put(IDGiver, fn);
         return IDGiver++;
@@ -172,12 +187,19 @@ public class FNodeManager {
         }
         for (FNode fn : FNodeMap.values()) {
             //draw every node
-            double x = fn.centerPos.getX() - fn.radius;
-            double y = fn.centerPos.getY() - fn.radius;
+            double x = fn.centerPos.getX();
+            double y = fn.centerPos.getY();
             double radius = fn.radius;
+
             gc.setStroke(fn.color);
             gc.setLineWidth(5);
-            gc.strokeOval(x, y, radius * 2, radius * 2);
+            gc.strokeOval(x - radius, y - radius, radius * 2, radius * 2);
+
+            if (selectedFNode == fn.ID) {
+                gc.setFill(selectedColor);
+                double selRadius = fn.radius * 0.8f;
+                gc.fillOval(x-selRadius, y-selRadius, selRadius * 2, selRadius * 2);
+            }
         }
     }
 
@@ -341,7 +363,7 @@ public class FNodeManager {
             angleStart = (Math.atan2(distanceY, distanceX) - Math.PI);
         }
 
-        double f = fromHasPointingArrow ?  1: 0;
+        double f = fromHasPointingArrow ? 1 : 0;
 
         double xStart = Math.cos(angleStart) * fn2.radius + fn2.centerPos.getX();
         double yStart = Math.sin(angleStart) * fn2.radius + fn2.centerPos.getY();
@@ -349,8 +371,8 @@ public class FNodeManager {
         double xEndExt = Math.cos(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
         double yEndExt = Math.sin(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
 
-        double xEndRot = Math.cos(angleEnd + (approachAngle - Math.PI/20)*f) * fn1.radius + fn1.centerPos.getX();
-        double yEndRot = Math.sin(angleEnd + (approachAngle - Math.PI/20)*f) * fn1.radius + fn1.centerPos.getY();
+        double xEndRot = Math.cos(angleEnd + (approachAngle - Math.PI / 20) * f) * fn1.radius + fn1.centerPos.getX();
+        double yEndRot = Math.sin(angleEnd + (approachAngle - Math.PI / 20) * f) * fn1.radius + fn1.centerPos.getY();
 
         gc.beginPath();
         gc.setStroke(connectionColor);
@@ -360,10 +382,10 @@ public class FNodeManager {
         gc.lineTo(xEndExt, yEndExt);
         gc.stroke();
 
-        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle*f) * arrowWidth + xEndExt;
-        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle*f) * arrowWidth + yEndExt;
-        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle*f) * arrowWidth + xEndExt;
-        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle*f) * arrowWidth + yEndExt;
+        double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + xEndExt;
+        double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + yEndExt;
+        double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + xEndExt;
+        double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + yEndExt;
 
         gc.setFill(connectionColor);
         gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xEndRot},
