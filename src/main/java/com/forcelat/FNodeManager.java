@@ -1,14 +1,16 @@
 package com.forcelat;
 
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
 
-import java.awt.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,23 +21,27 @@ public class FNodeManager {
         private Color color = Color.BLACK;
         private double radius = 30;
         private int ID;
-        private ArrayList<Integer> connIDList = new ArrayList<>();
+        private String text;
+        private HashMap<Integer,String> connIDText = new HashMap<>();
 
-        private FNode(Point2D centerPos, double radius, Color color, int ID) {
+        private FNode(Point2D centerPos,String text ,double radius, Color color, int ID) {
             this.centerPos = centerPos;
             this.radius = radius;
             this.color = color;
             this.ID = ID;
+            this.text = text;
         }
     }
 
     private GraphicsContext gc;
     private Color connectionColor = Color.RED;
+    private Color nodeColor = Color.RED;
+    private Color arrowColor = Color.RED;
+    private Color selectedColor = Color.GREEN;
     private double arrowExtendFactor = 1.3f; //how far from edge should arrow start
     private double arrowWidth = 7f;
     private int IDGiver = 0;
     private int selectedFNode = -1;
-    private Color selectedColor = Color.GREEN;
     private int prevID;
     private int fromFNodeID = -1;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
@@ -50,23 +56,22 @@ public class FNodeManager {
         //CTRL + LMB -> place node
         //CTRL + RMB -> delete node
         //LMB Drag -> move node around
-        //S + LMB -> select node
-
-        //TODO: select From and To Nodes
+        //LMB -> select node
 
         //Place/Remove FNode
         canvas.setOnMousePressed(e -> {
-            //TODO: Maybe double clicking?
             Point2D pos = new Point2D(e.getX(), e.getY());
             if (e.getButton() == MouseButton.PRIMARY && e.isControlDown()) {
 
                 //if node not found at mouse pos,generate one
                 int currID = getFNodeInRange(pos, 30);
+                /*TODO: Temp disable node creation thru mouse
                 if (currID == -1)
                     currID = addFNode(pos, 30, Color.RED);
+                    */
 
                 if (fromFNodeID != -1)
-                    addConnection(fromFNodeID, currID);
+                    addConnection(fromFNodeID, currID,"");
 
                 prevID = currID;
             }
@@ -95,12 +100,14 @@ public class FNodeManager {
 
     }
 
-    public int addFNode(Point2D centerPos, double radius, Color color) {
+    public void addFNode(Point2D centerPos, String text,double radius, Color color,int ID) {
 
-        prevID = IDGiver - 1;
-        FNode fn = new FNode(centerPos, radius, color, IDGiver);
-        FNodeMap.put(IDGiver, fn);
-        return IDGiver++;
+       // prevID = IDGiver - 1;
+        //FNode fn = new FNode(centerPos, radius, color, IDGiver);
+        //FNodeMap.put(IDGiver, fn);
+        //return IDGiver++;
+        FNode fn = new FNode(centerPos,text, radius, color, ID);
+        FNodeMap.put(ID, fn);
     }
 
     private void selectAndMove(Point2D scanPos, double scanRange) {
@@ -120,9 +127,9 @@ public class FNodeManager {
         FNodeMap.remove(nodeID);
 
         //Delete every reference of this node in the other nodes
-        for (FNode fn : FNodeMap.values()) {
-            fn.connIDList = fn.connIDList.stream().filter(e -> e != nodeID).collect(Collectors.toCollection(ArrayList::new));
-        }
+        for (FNode fn : FNodeMap.values())
+            fn.connIDText.remove(nodeID);
+
     }
 
     private void moveFNodeTo(int ID, Point2D pos) {
@@ -147,8 +154,9 @@ public class FNodeManager {
         return shortestID;
     }
 
-    public void addConnection(int idFrom, int idTo) {
-        FNodeMap.get(idFrom).connIDList.add(idTo);
+    public void addConnection(int idFrom, int idTo,String text) {
+        FNode fn = FNodeMap.get(idFrom);
+        fn.connIDText.put(idTo,text);
     }
 
     public void display() {
@@ -160,7 +168,7 @@ public class FNodeManager {
 
         for (FNode fn : FNodeMap.values()) {
             //draw every connection
-            for (Integer connID : fn.connIDList) {
+            for (Integer connID : fn.connIDText.keySet()) {
                 connectFNodeIDs(fn.ID, connID);
             }
         }
@@ -174,11 +182,24 @@ public class FNodeManager {
             gc.setLineWidth(5);
             gc.strokeOval(x - radius, y - radius, radius * 2, radius * 2);
 
+
             if (fromFNodeID == fn.ID) {
                 gc.setFill(selectedColor);
                 double selRadius = fn.radius * 0.8f;
                 gc.fillOval(x - selRadius, y - selRadius, selRadius * 2, selRadius * 2);
             }
+
+            gc.save();
+            gc.setTextBaseline(VPos.CENTER);
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFill(Color.BLACK);
+            gc.setFont(new Font("Calibri", 20));
+
+            Rotate r = new Rotate(0, x, y);
+            gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
+
+            gc.fillText(fn.text, x, y);
+            gc.restore();
         }
 
     }
@@ -187,7 +208,7 @@ public class FNodeManager {
         FNode fn1 = FNodeMap.get(toID);
         FNode fn2 = FNodeMap.get(fromID);
 
-        boolean fromHasPointingArrow = fn1.connIDList.contains(fn2.ID);
+        boolean fromHasPointingArrow = fn1.connIDText.containsKey(fn2.ID);
 
         double distanceX = fn2.centerPos.getX() - fn1.centerPos.getX();
         double distanceY = fn2.centerPos.getY() - fn1.centerPos.getY();
@@ -241,8 +262,19 @@ public class FNodeManager {
             double xArrowRight = Math.cos(angle * 2 - Math.PI / 2) * arrowWidth + xArrowBase;
             double yArrowRight = Math.sin(angle * 2 - Math.PI / 2) * arrowWidth + yArrowBase;
 
+            gc.save();
+            gc.setTextBaseline(VPos.CENTER);
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFill(Color.BLACK);
+            gc.setFont(new Font("Calibri", 20));
+
+            Rotate r = new Rotate(0, basePoint.getX(), cp1.getY());
+            gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
+
+            gc.fillText(fn2.connIDText.get(fn1.ID), basePoint.getX(), cp1.getY());
+            gc.restore();
+
             gc.setFill(connectionColor);
-            //gc.setFill(Color.BLACK);
             gc.fillPolygon(new double[]{xLBase, xArrowLeft, xArrowRight},
                     new double[]{yLBase, yArrowLeft, yArrowRight}, 3);
             return;
@@ -261,20 +293,20 @@ public class FNodeManager {
 
         double f = fromHasPointingArrow ? 1 : 0;
 
-        double xStart = Math.cos(angleStart-approachAngle*f) * fn2.radius + fn2.centerPos.getX();
-        double yStart = Math.sin(angleStart-approachAngle*f) * fn2.radius + fn2.centerPos.getY();
+        double xStart = Math.cos(angleStart - approachAngle * f) * fn2.radius + fn2.centerPos.getX();
+        double yStart = Math.sin(angleStart - approachAngle * f) * fn2.radius + fn2.centerPos.getY();
 
-        double xEndExt = Math.cos(angleEnd ) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
+        double xEndExt = Math.cos(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getX();
         double yEndExt = Math.sin(angleEnd) * fn1.radius * arrowExtendFactor + fn1.centerPos.getY();
 
-        double xEndRot = Math.cos(angleEnd + approachAngle  * f) * fn1.radius + fn1.centerPos.getX();
-        double yEndRot = Math.sin(angleEnd + approachAngle  * f) * fn1.radius + fn1.centerPos.getY();
+        double xEndRot = Math.cos(angleEnd + approachAngle * f) * fn1.radius + fn1.centerPos.getX();
+        double yEndRot = Math.sin(angleEnd + approachAngle * f) * fn1.radius + fn1.centerPos.getY();
 
-        double xMid = (xStart+xEndRot)*0.5;
-        double yMid = (yStart+yEndRot)*0.5;
+        double xMid = (xStart + xEndRot) * 0.5;
+        double yMid = (yStart + yEndRot) * 0.5;
 
-        double xAdv = Math.cos(angleStart)*10 + xMid;
-        double yAdv = Math.sin(angleStart)*10 + yMid ;
+        double xAdv = Math.cos(angleStart) * 10 + xMid;
+        double yAdv = Math.sin(angleStart) * 10 + yMid;
 
         gc.beginPath();
         gc.setStroke(connectionColor);
@@ -284,22 +316,28 @@ public class FNodeManager {
         gc.lineTo(xEndRot, yEndRot);
         gc.stroke();
 
-
-
         double xArrowLine1 = Math.cos(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + xMid;
         double yArrowLine1 = Math.sin(angleEnd - Math.PI / 2 - approachAngle * f) * arrowWidth + yMid;
         double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + xMid;
         double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + yMid;
 
-        /*gc.setFill(Color.BLACK);
-        gc.fillOval(xMid-1,yMid-1,2,2);
-        gc.fillOval(xAdv-1,yAdv-1,2,2);
-        gc.fillOval(xArrowLine1-1,yArrowLine1-1,2,2);
-        gc.fillOval(xArrowLine2-1,yArrowLine2-1,2,2);*/
+        double xText = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth + xMid;
+        double yText = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth + yMid;
 
+
+        gc.save();
+        gc.setTextBaseline(VPos.CENTER);
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFill(Color.BLACK);
+        gc.setFont(new Font("Calibri", 20));
+        //posibility to change angle later
+        Rotate r = new Rotate(0, xText, yText);
+        gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
+
+        gc.fillText(fn2.connIDText.get(fn1.ID), xText, yText);
+        gc.restore();
 
         gc.setFill(connectionColor);
-        //gc.setFill(Color.BLACK);
         gc.fillPolygon(new double[]{xArrowLine1, xArrowLine2, xAdv},
                 new double[]{yArrowLine1, yArrowLine2, yAdv}, 3);
     }
