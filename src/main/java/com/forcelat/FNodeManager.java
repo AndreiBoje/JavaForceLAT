@@ -1,9 +1,12 @@
 package com.forcelat;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -42,7 +45,6 @@ public class FNodeManager {
     private double arrowWidth = 7f;
     private int IDGiver = 0;
     private int selectedFNode = -1;
-    private int prevID;
     private int fromFNodeID = -1;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
 
@@ -55,10 +57,10 @@ public class FNodeManager {
         canvas.setFocusTraversable(true);
         //CTRL + LMB -> place node
         //CTRL + RMB -> delete node
-        //LMB Drag -> move node around
+        //SHIFT +LMB Drag -> move node around
         //LMB -> select node
 
-        //Place/Remove FNode
+        //ConnectSelected/Place/Remove FNode
         canvas.setOnMousePressed(e -> {
             Point2D pos = new Point2D(e.getX(), e.getY());
             if (e.getButton() == MouseButton.PRIMARY && e.isControlDown()) {
@@ -73,7 +75,7 @@ public class FNodeManager {
                 if (fromFNodeID != -1)
                     addConnection(fromFNodeID, currID,"");
 
-                prevID = currID;
+                //prevID = currID;
             }
             if (e.getButton() == MouseButton.SECONDARY && e.isControlDown()) {
                 int fn = getFNodeInRange(pos, 30);
@@ -87,7 +89,7 @@ public class FNodeManager {
             display();
         });
         canvas.setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
+            if (e.getButton() == MouseButton.PRIMARY ) {
                 Point2D scanPos = new Point2D(e.getX(), e.getY());
                 selectAndMove(scanPos, 30);
                 display();

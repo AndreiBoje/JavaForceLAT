@@ -5,14 +5,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.util.HashSet;
@@ -31,16 +32,20 @@ public class Main extends Application {
         double width = 900;
         double height = 600;
 
-        Canvas canvas = new Canvas(width, height);
+        Canvas canvas = new Canvas(2000, 1000);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        canvas.addEventFilter(MouseEvent.MOUSE_CLICKED, (e) -> canvas.requestFocus());
+        canvas.addEventFilter(MouseEvent.MOUSE_DRAGGED, (e) -> canvas.requestFocus());
+
 
         FNodeManager fnm = new FNodeManager(gc);
+
         fnm.initListeners();
 
-        fnm.addFNode(new Point2D(100, 280), "A", 30, Color.RED, 0);
-        fnm.addFNode(new Point2D(600, 280), "B", 30, Color.RED, 1);
-        fnm.addFNode(new Point2D(200, 480), "C", 30, Color.RED, 2);
-        fnm.addFNode(new Point2D(500, 480), "D", 30, Color.RED, 3);
+        fnm.addFNode(new Point2D(100, 280), "A", 20, Color.RED, 0);
+        fnm.addFNode(new Point2D(600, 280), "B", 20, Color.RED, 1);
+        fnm.addFNode(new Point2D(200, 480), "C", 20, Color.RED, 2);
+        fnm.addFNode(new Point2D(500, 480), "D", 20, Color.RED, 3);
 
 
         //def -rad 30 -col ff0000 <- override some default values
@@ -57,7 +62,8 @@ public class Main extends Application {
         fnm.addConnection(1, 0, "Hola");
         fnm.display();
 
-        //FParser fp = new FParser(tb)
+
+
         //while(fp.hasCommands()){
         /*
            switch(fp.getNextCommand()){
@@ -78,12 +84,18 @@ public class Main extends Application {
            fp.consumeCommand();
         }
          */
+        ScrollPane scr = new ScrollPane(canvas);
+        TextArea ta = new TextArea("ceva");
+        FParser fp = new FParser(ta);
 
-        TextArea a = new TextArea("ceva");
-        VBox sp = new VBox(canvas);
-        Scene scene = new Scene(sp, width, height);
-        //canvas.addEventFilter(MouseEvent.MOUSE_CLICKED, (e) -> canvas.requestFocus());
-        //canvas.addEventFilter(MouseEvent.MOUSE_DRAGGED, (e) -> canvas.requestFocus());
+
+        VBox hb = new VBox(scr,ta);
+        ta.setMinHeight(150);
+        ta.setFont(new Font("Calibri",20));
+
+
+
+        Scene scene = new Scene(hb, width, height);
         window.setScene(scene);
         window.setTitle("NFA");
         window.show();
