@@ -171,7 +171,7 @@ public class FNodeManager {
         for (FNode fn : FNodeMap.values()) {
             //draw every connection
             for (Integer connID : fn.connIDText.keySet()) {
-                connectFNodeIDs(fn.ID, connID);
+                drawConnectionFNodeIDs(fn.ID, connID);
             }
         }
         for (FNode fn : FNodeMap.values()) {
@@ -206,7 +206,7 @@ public class FNodeManager {
 
     }
 
-    private void connectFNodeIDs(int fromID, int toID) {
+    private void drawConnectionFNodeIDs(int fromID, int toID) {
         FNode fn1 = FNodeMap.get(toID);
         FNode fn2 = FNodeMap.get(fromID);
 
@@ -323,15 +323,15 @@ public class FNodeManager {
         double xArrowLine2 = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + xMid;
         double yArrowLine2 = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * arrowWidth + yMid;
 
-        double xText = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth + xMid;
-        double yText = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth + yMid;
+        double xText = Math.cos(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth/1.5 + xMid;
+        double yText = Math.sin(angleEnd + Math.PI / 2 - approachAngle * f) * 3 * arrowWidth/1.5 + yMid;
 
 
         gc.save();
         gc.setTextBaseline(VPos.CENTER);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(Color.BLACK);
-        gc.setFont(new Font("Calibri", 20));
+        gc.setFont(new Font("Calibri", 15));
         //posibility to change angle later
         Rotate r = new Rotate(0, xText, yText);
         gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
