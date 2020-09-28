@@ -27,16 +27,16 @@ public class Main extends Application {
 
 
         FNodeManager2 fnm = new FNodeManager2(gc);
+        fnm.initInteractivity();
         fnm.addFNode(100,230,0);
         fnm.addFNode(300,230,1);
         fnm.addFNode(500,230,2);
 
-        fnm.jprFConnection(0,2);
-        fnm.jprFConnection(2,0);
-        fnm.selfFConnection(0);
-        fnm.selfFConnection(2);
-        fnm.bidFConnection(1,2);
+        //fnm.selfFConnection(0);
+        //fnm.selfFConnection(2);
+        //fnm.bidFConnection(1,2);
         fnm.unidFConnection(0,1);
+        //fnm.jprFConnection(2,0);
         fnm.display();
 
 

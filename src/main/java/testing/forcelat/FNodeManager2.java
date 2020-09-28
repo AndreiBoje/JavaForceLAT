@@ -7,8 +7,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Pair;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 
@@ -21,6 +22,7 @@ class FNode {
     double radius = 30;
     Integer ID;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
+    HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
     boolean selfConnects = false;
 
@@ -57,6 +59,15 @@ abstract class FConnection {
     Point2D arrowBase2 = new Point2D(0, 0);
     double arrowAngle2 = 0;
 
+
+    public void update(Point2D fromLoc, Point2D toLoc, Point2D fromLoc2, Point2D toLoc2, Point2D cp1, Point2D cp2) {
+        this.fromLoc = fromLoc;
+        this.fromLoc2 = fromLoc2;
+        this.toLoc = toLoc;
+        this.toLoc2 = toLoc2;
+        this.cp1 = cp1;
+        this.cp2 = cp2;
+    }
 
     public abstract void draw();
 
@@ -213,12 +224,12 @@ class SelfFConnection extends FConnection {
 
 class JprFConnection extends FConnection {
 
-    public JprFConnection(GraphicsContext gc,Point2D fromLoc,Point2D cp1,Point2D cp2,Point2D toLoc) {
+    public JprFConnection(GraphicsContext gc, Point2D fromLoc, Point2D cp1, Point2D cp2, Point2D toLoc) {
         this.gcFConnection = gc;
         this.fromLoc = fromLoc;
         this.cp1 = cp1;
         this.cp2 = cp2;
-        this.toLoc=toLoc;
+        this.toLoc = toLoc;
     }
 
     @Override
@@ -226,10 +237,10 @@ class JprFConnection extends FConnection {
         gcFConnection.beginPath();
         gcFConnection.setStroke(color);
         gcFConnection.setLineWidth(lineWidth);
-        gcFConnection.moveTo(fromLoc.getX(),fromLoc.getY());
-        gcFConnection.lineTo(cp1.getX(),cp1.getY());
-        gcFConnection.lineTo(cp2.getX(),cp2.getY());
-        gcFConnection.lineTo(toLoc.getX(),toLoc.getY());
+        gcFConnection.moveTo(fromLoc.getX(), fromLoc.getY());
+        gcFConnection.lineTo(cp1.getX(), cp1.getY());
+        gcFConnection.lineTo(cp2.getX(), cp2.getY());
+        gcFConnection.lineTo(toLoc.getX(), toLoc.getY());
         gcFConnection.stroke();
         gcFConnection.closePath();
         drawArrow(arrowBase, arrowAngle);
@@ -237,8 +248,8 @@ class JprFConnection extends FConnection {
 
     @Override
     public void setArrowData(Point2D baseLoc, double angle) {
-        this.arrowBase=baseLoc;
-        this.arrowAngle=angle;
+        this.arrowBase = baseLoc;
+        this.arrowAngle = angle;
     }
 
     @Override
@@ -253,10 +264,58 @@ public class FNodeManager2 {
     private Color clearScreenColor = Color.WHITE;
     private GraphicsContext gc;
     private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
-    private TreeMap<Integer, FConnection> FConnectionMap = new TreeMap<>();
+
+    private HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
+
+    private int selectedFNodeID = -1;
 
     public FNodeManager2(GraphicsContext gc) {
         this.gc = gc;
+    }
+
+    public void initInteractivity() {
+        Canvas canvas = gc.getCanvas();
+
+        canvas.setOnMousePressed(e -> {
+            //get nearest node ID in range HARDCODED: 30 (radius default)
+            double searchRadius = 30;
+            Point2D cursorLoc = new Point2D(e.getX(), e.getY());
+
+            if (selectedFNodeID == -1) {
+                for (FNode fn : FNodeMap.values()) {
+                    double dist = cursorLoc.distance(fn.loc);
+                    if (dist <= searchRadius) {
+                        selectedFNodeID = fn.ID;
+                        break;
+                    }
+                }
+            }
+
+            if (selectedFNodeID != -1) {
+                //System.out.println(selectedFNodeID);
+                //move node
+                //recalculate all connections
+
+                FNode fn = FNodeMap.get(selectedFNodeID);
+
+//              fn.loc = cursorLoc;
+
+                for (int ID : FNodeMap.get(selectedFNodeID).unidConnectionTo) {
+                      //update de from data
+                }
+
+                System.out.println("Unid:" + FNodeMap.get(selectedFNodeID).unidConnectionTo);
+                System.out.println("Bid :" + FNodeMap.get(selectedFNodeID).bidConnectsWith);
+                System.out.println("Self:" + FNodeMap.get(selectedFNodeID).selfConnects);
+                System.out.println();
+                // fc.update();
+            }
+            display();
+        });
+        //reset selection
+        canvas.setOnMouseReleased(e -> {
+            selectedFNodeID = -1;
+        });
     }
 
     public void addFNode(double xPos, double yPos, int ID) {
@@ -265,6 +324,7 @@ public class FNodeManager2 {
         FNodeMap.put(ID, fn);
     }
 
+    //JPR is considered to be unidirectional even if you have (0,1) and (1,0) jpr
     public void jprFConnection(int fromID, int toID) {
         FNode fromFNode = FNodeMap.get(fromID);
         FNode toFNode = FNodeMap.get(toID);
@@ -275,28 +335,28 @@ public class FNodeManager2 {
         double distY = (fromFNode.loc.getY() - toFNode.loc.getY());
 
         double angle = Math.atan2(distY, distX);
-        double angleRise = Math.PI/4;
+        double angleRise = Math.PI / 4;
         double extendFactor = 100;
 
-        double xStart = Math.cos(angle+Math.PI-angleRise)*fromFNode.radius+fromFNode.loc.getX();
-        double yStart = Math.sin(angle+Math.PI-angleRise)*fromFNode.radius+fromFNode.loc.getY();
-        Point2D startLoc = new Point2D(xStart,yStart);
+        double xStart = Math.cos(angle + Math.PI - angleRise) * fromFNode.radius + fromFNode.loc.getX();
+        double yStart = Math.sin(angle + Math.PI - angleRise) * fromFNode.radius + fromFNode.loc.getY();
+        Point2D startLoc = new Point2D(xStart, yStart);
 
-        double xEnd = Math.cos(angle+angleRise)*toFNode.radius+toFNode.loc.getX();
-        double yEnd = Math.sin(angle+angleRise)*toFNode.radius+toFNode.loc.getY();
-        Point2D endLoc = new Point2D(xEnd,yEnd);
+        double xEnd = Math.cos(angle + angleRise) * toFNode.radius + toFNode.loc.getX();
+        double yEnd = Math.sin(angle + angleRise) * toFNode.radius + toFNode.loc.getY();
+        Point2D endLoc = new Point2D(xEnd, yEnd);
 
-        double xHandleL = Math.cos(angle+Math.PI-angleRise)*extendFactor+fromFNode.loc.getX();
-        double yHandleL = Math.sin(angle+Math.PI-angleRise)*extendFactor+fromFNode.loc.getY();
-        Point2D cp1 = new Point2D(xHandleL,yHandleL);
+        double xHandleL = Math.cos(angle + Math.PI - angleRise) * extendFactor + fromFNode.loc.getX();
+        double yHandleL = Math.sin(angle + Math.PI - angleRise) * extendFactor + fromFNode.loc.getY();
+        Point2D cp1 = new Point2D(xHandleL, yHandleL);
 
-        double xHandleR = Math.cos(angle+angleRise)*extendFactor+toFNode.loc.getX();
-        double yHandleR = Math.sin(angle+angleRise)*extendFactor+toFNode.loc.getY();
-        Point2D cp2 = new Point2D(xHandleR,yHandleR);
+        double xHandleR = Math.cos(angle + angleRise) * extendFactor + toFNode.loc.getX();
+        double yHandleR = Math.sin(angle + angleRise) * extendFactor + toFNode.loc.getY();
+        Point2D cp2 = new Point2D(xHandleR, yHandleR);
 
-        double xArrow = (xHandleL+xHandleR)/2;
-        double yArrow = (yHandleL+yHandleR)/2;
-        Point2D arrowLoc = new Point2D(xArrow,yArrow);
+        double xArrow = (xHandleL + xHandleR) / 2;
+        double yArrow = (yHandleL + yHandleR) / 2;
+        Point2D arrowLoc = new Point2D(xArrow, yArrow);
 
         /*gc.setFill(Color.BLUE);
         gc.fillOval(xStart-5,yStart-5,10,10);
@@ -304,11 +364,13 @@ public class FNodeManager2 {
         gc.fillOval(xHandleL-5,yHandleL-5,10,10);
         gc.fillOval(xHandleR-5,yHandleR-5,10,10);*/
 
-        FConnection fc = new JprFConnection(gc, startLoc,cp1,cp2, endLoc);
-        fc.setArrowData(arrowLoc, angle+Math.PI);
+        FConnection fc = new JprFConnection(gc, startLoc, cp1, cp2, endLoc);
+        fc.setArrowData(arrowLoc, angle + Math.PI);
 
-        fromFNode.unidConnectionTo.add(toID);
-        FConnectionMap.put(FConnIDGiver++, fc);
+        fromFNode.jprConnectionTo.add(toID);
+        Pair<Integer, Integer> key = new Pair<>(fromID, toID);
+        FConnectionMap.put(key, fc);
+        // FConnectionMap.put(FConnIDGiver++, fc);
 
     }
 
@@ -339,7 +401,10 @@ public class FNodeManager2 {
         fc.setArrowData(arrowLoc, angle + Math.PI);
 
         fromFNode.unidConnectionTo.add(toID);
-        FConnectionMap.put(FConnIDGiver++, fc);
+        Pair<Integer, Integer> key = new Pair<>(fromID, toID);
+        FConnectionMap.put(key, fc);
+        //TODO:make connection ID based on fromID and toID
+        //FConnectionMap.put(FConnIDGiver++, fc);
     }
 
     public void bidFConnection(int fromID, int toID) {
@@ -387,8 +452,9 @@ public class FNodeManager2 {
 
         fromFNode.bidConnectsWith.add(toID);
         toFNode.bidConnectsWith.add(fromID);
-
-        FConnectionMap.put(FConnIDGiver++, fc);
+        Pair<Integer, Integer> key = new Pair<>(fromID, toID);
+        FConnectionMap.put(key, fc);
+        // FConnectionMap.put(FConnIDGiver++, fc);
     }
 
     public void selfFConnection(int ID) {
@@ -428,21 +494,23 @@ public class FNodeManager2 {
         FConnection fc = new SelfFConnection(gc, startLoc, cp1, cp2, endLoc);
         fn.selfConnects = true;
         fc.setArrowData(locArrow, -angleApproach + Math.PI / 2);
-        FConnectionMap.put(FConnIDGiver++, fc);
+        Pair<Integer, Integer> key = new Pair<>(ID, ID);
+        FConnectionMap.put(key, fc);
+        //FConnectionMap.put(FConnIDGiver++, fc);
 
     }
-
 
     public void display() {
 
         //clear last screen
         Canvas canvas = gc.getCanvas();
-        // gc.setFill(clearScreenColor);
-        // gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.setFill(clearScreenColor);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         //draw connections
         for (FConnection fc : FConnectionMap.values())
             fc.draw();
+
 
         //draw nodes
         for (FNode fn : FNodeMap.values())
