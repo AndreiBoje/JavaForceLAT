@@ -28,17 +28,18 @@ public class Main extends Application {
 
         FNodeManager2 fnm = new FNodeManager2(gc);
         fnm.initInteractivity();
-        fnm.addFNode(100,230,0);
-        fnm.addFNode(300,230,1);
-        fnm.addFNode(500,230,2);
+        fnm.addFNode(100, 230, 0);
+        fnm.addFNode(300, 230, 1);
+        fnm.addFNode(500, 230, 2);
+        fnm.addFNode(700, 230, 3);
 
-        //fnm.selfFConnection(0);
-        //fnm.selfFConnection(2);
-        //fnm.bidFConnection(1,2);
-        fnm.unidFConnection(0,1);
-        //fnm.jprFConnection(2,0);
+        //fnm.jprFConnection(0, 3,"asd");
+        //fnm.unidFConnection(1, 2,"a,b,...,z");
+        //fnm.bidFConnection(0, 1,"ab","cd");
+        //fnm.selfFConnection(3,"aaa");
+
+
         fnm.display();
-
 
 
         VBox vb = new VBox(canvas);
@@ -50,8 +51,6 @@ public class Main extends Application {
 
     }
 }
-
-
 
 
 //def -rad 30 -col ff0000 <- override some default values
