@@ -1,9 +1,10 @@
 package com.forcelat;
 
-import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import testing.forcelat.FNodeManager2;
 
 import javafx.application.Application;
 import javafx.scene.canvas.Canvas;
@@ -22,28 +23,34 @@ public class Main extends Application {
         double width = 900;
         double height = 600;
 
-        Canvas canvas = new Canvas(900, 600);
+        TextArea ta = new TextArea("ceva");
+        ta.setMinSize(width,100);
+        Canvas canvas = new Canvas(1500, 1000);
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
 
-        FNodeManager2 fnm = new FNodeManager2(gc);
-        fnm.initInteractivity();
-        fnm.addFNode(100, 230, 0);
+        FNodeManager fnm = new FNodeManager(gc);
+        FParser fp = new FParser(ta,fnm);
+        fp.beginFParse();
+
+
+
+        //fnm.initInteractivity();
+        /*fnm.addFNode(100, 230, 0);
         fnm.addFNode(300, 230, 1);
         fnm.addFNode(500, 230, 2);
         fnm.addFNode(700, 230, 3);
 
-        //fnm.jprFConnection(0, 3,"asd");
-        //fnm.unidFConnection(1, 2,"a,b,...,z");
-        //fnm.bidFConnection(0, 1,"ab","cd");
-        //fnm.selfFConnection(3,"aaa");
+        fnm.jprFConnection(0, 3,"asd");
+        fnm.unidFConnection(1, 2,"a,b,...,z");
+        fnm.bidFConnection(0, 1,"ab","cd");
+        fnm.selfFConnection(3,"aaa");
 
+        fnm.display();*/
 
-        fnm.display();
-
-
-        VBox vb = new VBox(canvas);
-        Scene scene = new Scene(vb, 900, 600);
+        ScrollPane sp = new ScrollPane(canvas);
+        VBox vb = new VBox(sp,ta);
+        Scene scene = new Scene(vb, width, height);
         window.setScene(scene);
         window.setTitle("NFA");
         window.show();
