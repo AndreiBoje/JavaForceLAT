@@ -3,6 +3,7 @@ package com.forcelat;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -23,8 +24,8 @@ public class Main extends Application {
         double width = 900;
         double height = 600;
 
-        TextArea ta = new TextArea("ceva");
-        ta.setMinSize(width,100);
+        TextArea ta = new TextArea();
+        ta.setMinWidth(300);
         Canvas canvas = new Canvas(1500, 1000);
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
@@ -49,7 +50,8 @@ public class Main extends Application {
         fnm.display();*/
 
         ScrollPane sp = new ScrollPane(canvas);
-        VBox vb = new VBox(sp,ta);
+        sp.setPannable(true);
+        HBox vb = new HBox(sp,ta);
         Scene scene = new Scene(vb, width, height);
         window.setScene(scene);
         window.setTitle("NFA");

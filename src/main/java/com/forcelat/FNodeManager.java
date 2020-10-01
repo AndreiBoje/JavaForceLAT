@@ -22,15 +22,17 @@ class FNode {
     int strokeWidth = 3;
     double radius = 30;
     Integer ID;
+    String txt;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
     boolean selfConnects = false;
 
-    public FNode(GraphicsContext gcFNode, Point2D location, int ID) {
+    public FNode(GraphicsContext gcFNode, Point2D location, int ID,String txt) {
         this.gcFNode = gcFNode;
         this.loc = location;
         this.ID = ID;
+        this.txt=txt;
     }
 
     public void draw() {
@@ -39,7 +41,7 @@ class FNode {
         gcFNode.setFont(new Font("Calibri", 30));
         gcFNode.setTextAlign(TextAlignment.CENTER);
         gcFNode.setTextBaseline(VPos.CENTER);
-        gcFNode.fillText(ID.toString(), loc.getX(), loc.getY());
+        gcFNode.fillText(txt, loc.getX(), loc.getY());
 
         //draw contour
         gcFNode.setStroke(color);
@@ -366,6 +368,7 @@ public class FNodeManager {
         FNodeMap.clear();
         FConnectionMap.clear();
     }
+
     public void initInteractivity() {
         Canvas canvas = gc.getCanvas();
 
@@ -418,9 +421,9 @@ public class FNodeManager {
         });
     }
 
-    public void addFNode(double xPos, double yPos, int ID) {
+    public void addFNode(double xPos, double yPos, int ID,String txt) {
         Point2D loc = new Point2D(xPos, yPos);
-        FNode fn = new FNode(gc, loc, ID);
+        FNode fn = new FNode(gc, loc, ID,txt);
         FNodeMap.put(ID, fn);
     }
 
