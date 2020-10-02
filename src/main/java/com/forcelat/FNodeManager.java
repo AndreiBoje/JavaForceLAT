@@ -17,22 +17,23 @@ import java.util.TreeMap;
 
 class FNode {
     GraphicsContext gcFNode;
-    Point2D loc = new Point2D(0, 0);
+    Point2D loc;
     Color color = Color.BLACK;
     int strokeWidth = 3;
     double radius = 30;
     Integer ID;
-    String txt;
+    String txt,referenceTxt;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
     boolean selfConnects = false;
 
-    public FNode(GraphicsContext gcFNode, Point2D location, int ID,String txt) {
+    public FNode(GraphicsContext gcFNode, Point2D location, int ID, String txt,String referenceTxt) {
         this.gcFNode = gcFNode;
         this.loc = location;
         this.ID = ID;
-        this.txt=txt;
+        this.txt = txt;
+        this.referenceTxt=referenceTxt;
     }
 
     public void draw() {
@@ -118,8 +119,8 @@ class UnidFConnection extends FConnection {
         double yArrow = (yStart + yEnd) / 2;
         Point2D arrowLoc = new Point2D(xArrow, yArrow);
 
-        double xText = Math.cos(angle + Math.PI/2) * 20 + xArrow;
-        double yText = Math.sin(angle + Math.PI/2) * 20 + yArrow;
+        double xText = Math.cos(angle + Math.PI / 2) * 20 + xArrow;
+        double yText = Math.sin(angle + Math.PI / 2) * 20 + yArrow;
 
         //draw
         gcFConnection.setFill(color);
@@ -144,12 +145,12 @@ class UnidFConnection extends FConnection {
 
 class BidFConnection extends FConnection {
 
-    public BidFConnection(GraphicsContext gcFConnection, FNode fromFNode, FNode toFNode,String textFrom,String textTo) {
+    public BidFConnection(GraphicsContext gcFConnection, FNode fromFNode, FNode toFNode, String textFrom, String textTo) {
         this.gcFConnection = gcFConnection;
         this.fromFNode = fromFNode;
         this.toFNode = toFNode;
         this.textFrom = textFrom;
-        this.textTo=textTo;
+        this.textTo = textTo;
     }
 
     @Override
@@ -186,11 +187,11 @@ class BidFConnection extends FConnection {
         double yArrow2 = (yStart2 + yEnd2) / 2;
         Point2D arrowLoc2 = new Point2D(xArrow2, yArrow2);
 
-        double xText = Math.cos(angleBase + Math.PI/2) * 20 + xArrow;
-        double yText = Math.sin(angleBase + Math.PI/2) * 20 + yArrow;
+        double xText = Math.cos(angleBase + Math.PI / 2) * 20 + xArrow;
+        double yText = Math.sin(angleBase + Math.PI / 2) * 20 + yArrow;
 
-        double xText2 = Math.cos(angleBase - Math.PI/2) * 20 + xArrow2;
-        double yText2 = Math.sin(angleBase - Math.PI/2) * 20 + yArrow2;
+        double xText2 = Math.cos(angleBase - Math.PI / 2) * 20 + xArrow2;
+        double yText2 = Math.sin(angleBase - Math.PI / 2) * 20 + yArrow2;
         //draw
         gcFConnection.setFill(color);
         gcFConnection.setTextAlign(TextAlignment.CENTER);
@@ -200,7 +201,7 @@ class BidFConnection extends FConnection {
         Rotate r = new Rotate(0, xText, yText);
         gcFConnection.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
         gcFConnection.fillText(textFrom, xText2, yText2);
-        gcFConnection.fillText(textTo,xText,yText);
+        gcFConnection.fillText(textTo, xText, yText);
         gcFConnection.restore();
         gcFConnection.beginPath();
         gcFConnection.setStroke(color);
@@ -220,10 +221,10 @@ class BidFConnection extends FConnection {
 
 class SelfFConnection extends FConnection {
 
-    public SelfFConnection(GraphicsContext gc, FNode fn,String textFrom) {
+    public SelfFConnection(GraphicsContext gc, FNode fn, String textFrom) {
         this.gcFConnection = gc;
         this.fromFNode = fn;
-        this.textFrom=textFrom;
+        this.textFrom = textFrom;
     }
 
     @Override
@@ -247,8 +248,8 @@ class SelfFConnection extends FConnection {
         double yArrow = Math.sin(-angleApproach - Math.PI / 2) * 10 + yBaseR;
         Point2D locArrow = new Point2D(xArrow, yArrow);
 
-        double xText = (xCp1+xCp2)/2;
-        double yText = yCp1+5;
+        double xText = (xCp1 + xCp2) / 2;
+        double yText = yCp1 + 5;
 
         gcFConnection.setFill(color);
         gcFConnection.setTextAlign(TextAlignment.CENTER);
@@ -257,7 +258,7 @@ class SelfFConnection extends FConnection {
         gcFConnection.save();
         Rotate r = new Rotate(0, xText, yText);
         gcFConnection.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
-        gcFConnection.fillText(textFrom,xText,yText);
+        gcFConnection.fillText(textFrom, xText, yText);
         gcFConnection.restore();
         gcFConnection.beginPath();
         gcFConnection.setStroke(color);
@@ -290,11 +291,11 @@ class SelfFConnection extends FConnection {
 
 class JprFConnection extends FConnection {
 
-    public JprFConnection(GraphicsContext gc, FNode fromFNode, FNode toFNode,String textFrom) {
+    public JprFConnection(GraphicsContext gc, FNode fromFNode, FNode toFNode, String textFrom) {
         this.gcFConnection = gc;
         this.fromFNode = fromFNode;
         this.toFNode = toFNode;
-        this.textFrom=textFrom;
+        this.textFrom = textFrom;
     }
 
     @Override
@@ -323,8 +324,8 @@ class JprFConnection extends FConnection {
         double yArrow = (yHandleL + yHandleR) / 2;
         Point2D arrowLoc = new Point2D(xArrow, yArrow);
 
-        double xText = Math.cos(angle + Math.PI/2) * 20 + xArrow;
-        double yText = Math.sin(angle + Math.PI/2) * 20 + yArrow;
+        double xText = Math.cos(angle + Math.PI / 2) * 20 + xArrow;
+        double yText = Math.sin(angle + Math.PI / 2) * 20 + yArrow;
         //draw
 
         gcFConnection.setFill(color);
@@ -334,7 +335,7 @@ class JprFConnection extends FConnection {
         gcFConnection.save();
         Rotate r = new Rotate(0, xText, yText);
         gcFConnection.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
-        gcFConnection.fillText(textFrom,xText,yText);
+        gcFConnection.fillText(textFrom, xText, yText);
         gcFConnection.restore();
         gcFConnection.beginPath();
         gcFConnection.setStroke(color);
@@ -351,20 +352,20 @@ class JprFConnection extends FConnection {
 
 
 public class FNodeManager {
-    private int FConnIDGiver = 0;
+    //defaults
+
+    private int FNodeIDGiver = 0;
     private Color clearScreenColor = Color.WHITE;
-    private GraphicsContext gc;
-    private TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
-
-    private HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
-
+    private final GraphicsContext gc;
+    private final TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
+    private final HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
     private int selectedFNodeID = -1;
 
     public FNodeManager(GraphicsContext gc) {
         this.gc = gc;
     }
 
-    public void clear(){
+    public void clear() {
         FNodeMap.clear();
         FConnectionMap.clear();
     }
@@ -421,19 +422,29 @@ public class FNodeManager {
         });
     }
 
-    public void addFNode(double xPos, double yPos, int ID,String txt) {
+    public void addFNode(double xPos, double yPos, String txt,String referenceTxt) {
         Point2D loc = new Point2D(xPos, yPos);
-        FNode fn = new FNode(gc, loc, ID,txt);
-        FNodeMap.put(ID, fn);
+        FNode fn = new FNode(gc, loc, FNodeIDGiver, txt,referenceTxt);
+        FNodeMap.put(FNodeIDGiver, fn);
+        FNodeIDGiver++;
     }
 
-    public void jprFConnection(int fromID, int toID,String text) {
+    public int getFNodeIDByTxt(String txt) {
+
+        //ALSO BY TEXTREFERENCE? MAYBE
+        for (FNode fn : FNodeMap.values())
+            if (fn.referenceTxt.equals(txt) || fn.txt.equals(txt))
+                return fn.ID;
+        return -1;
+    }
+
+    public void jprFConnection(int fromID, int toID, String text) {
         FNode fromFNode = FNodeMap.get(fromID);
         FNode toFNode = FNodeMap.get(toID);
 
         if (fromFNode == null || toFNode == null) return;
 
-        FConnection fc = new JprFConnection(gc, fromFNode, toFNode,text);
+        FConnection fc = new JprFConnection(gc, fromFNode, toFNode, text);
 
         fromFNode.jprConnectionTo.add(toID);
         Pair<Integer, Integer> key = new Pair<>(fromID, toID);
@@ -453,13 +464,13 @@ public class FNodeManager {
         FConnectionMap.put(key, fc);
     }
 
-    public void bidFConnection(int fromID, int toID,String fromText,String toText) {
+    public void bidFConnection(int fromID, int toID, String fromText, String toText) {
         FNode fromFNode = FNodeMap.get(fromID);
         FNode toFNode = FNodeMap.get(toID);
 
         if (fromFNode == null || toFNode == null) return;
 
-        FConnection fc = new BidFConnection(gc, fromFNode, toFNode,fromText,toText);
+        FConnection fc = new BidFConnection(gc, fromFNode, toFNode, fromText, toText);
 
         fromFNode.bidConnectsWith.add(toID);
         toFNode.bidConnectsWith.add(fromID);
@@ -467,12 +478,12 @@ public class FNodeManager {
         FConnectionMap.put(key, fc);
     }
 
-    public void selfFConnection(int ID,String text) {
+    public void selfFConnection(int ID, String text) {
         FNode fn = FNodeMap.get(ID);
 
         if (fn == null) return;
 
-        FConnection fc = new SelfFConnection(gc, fn,text);
+        FConnection fc = new SelfFConnection(gc, fn, text);
         fn.selfConnects = true;
         Pair<Integer, Integer> key = new Pair<>(ID, ID);
         FConnectionMap.put(key, fc);
