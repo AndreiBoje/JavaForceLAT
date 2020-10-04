@@ -21,19 +21,22 @@ class FNode {
     Color color = Color.BLACK;
     int strokeWidth = 3;
     double radius = 30;
+    double smallRadius = 25;
     Integer ID;
-    String txt,referenceTxt;
+    String txt, referenceTxt;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
     boolean selfConnects = false;
+    boolean isFinal = false;
+    boolean isStart = false;
 
-    public FNode(GraphicsContext gcFNode, Point2D location, int ID, String txt,String referenceTxt) {
+    public FNode(GraphicsContext gcFNode, Point2D location, int ID, String txt, String referenceTxt) {
         this.gcFNode = gcFNode;
         this.loc = location;
         this.ID = ID;
         this.txt = txt;
-        this.referenceTxt=referenceTxt;
+        this.referenceTxt = referenceTxt;
     }
 
     public void draw() {
@@ -48,6 +51,17 @@ class FNode {
         gcFNode.setStroke(color);
         gcFNode.setLineWidth(strokeWidth);
         gcFNode.strokeOval(loc.getX() - radius, loc.getY() - radius, radius * 2, radius * 2);
+
+        if (isFinal) {
+            gcFNode.strokeOval(loc.getX() - smallRadius, loc.getY() - smallRadius, smallRadius * 2, smallRadius * 2);
+        }
+        if (isStart) {
+            double xArrowStart = loc.getX()-100;
+            double yArrowStart = loc.getY();
+            double xArrowEnd = loc.getX()-radius;
+            double yArrowEnd = loc.getY();
+            UnidFConnection uc =  new UnidFConnection(gcFNode,new Point2D(xArrowStart,yArrowStart),new Point2D(xArrowEnd,yArrowEnd));
+        }
     }
 }
 
@@ -63,9 +77,6 @@ abstract class FConnection {
 
     public void updatePos(FNode updatedFrom) {
         this.fromFNode = updatedFrom;
-    }
-
-    public void updateText() {
     }
 
     public void drawArrow(Point2D arrowBase, double angle) {
@@ -94,6 +105,17 @@ abstract class FConnection {
 
 class UnidFConnection extends FConnection {
 
+    public UnidFConnection(GraphicsContext gcFConnection,Point2D from,Point2D to){
+        //draw
+        this.gcFConnection = gcFConnection;
+        Point2D mid = new Point2D((from.getX()+to.getX())/2,(to.getY()+from.getY())/2);
+        gcFConnection.beginPath();
+        gcFConnection.setStroke(Color.BLACK);
+        gcFConnection.moveTo(from.getX(),from.getY());
+        gcFConnection.lineTo(to.getX(),to.getY());
+        gcFConnection.stroke();
+        drawArrow(mid,0);
+    }
     public UnidFConnection(GraphicsContext gcFConnection, FNode fromFNode, FNode toFNode, String text) {
         this.gcFConnection = gcFConnection;
         this.fromFNode = fromFNode;
@@ -350,7 +372,6 @@ class JprFConnection extends FConnection {
     }
 }
 
-
 public class FNodeManager {
     //defaults
 
@@ -422,9 +443,9 @@ public class FNodeManager {
         });
     }
 
-    public void addFNode(double xPos, double yPos, String txt,String referenceTxt) {
+    public void addFNode(double xPos, double yPos, String txt, String referenceTxt) {
         Point2D loc = new Point2D(xPos, yPos);
-        FNode fn = new FNode(gc, loc, FNodeIDGiver, txt,referenceTxt);
+        FNode fn = new FNode(gc, loc, FNodeIDGiver, txt, referenceTxt);
         FNodeMap.put(FNodeIDGiver, fn);
         FNodeIDGiver++;
     }
@@ -436,6 +457,18 @@ public class FNodeManager {
             if (fn.referenceTxt.equals(txt) || fn.txt.equals(txt))
                 return fn.ID;
         return -1;
+    }
+
+    public void makeFinal(String textRef) {
+        FNode fn = FNodeMap.get(getFNodeIDByTxt(textRef));
+        if (fn != null)
+            fn.isFinal = true;
+    }
+
+    public void makeStart(String textRef) {
+        FNode fn = FNodeMap.get(getFNodeIDByTxt(textRef));
+        if (fn != null)
+            fn.isStart = true;
     }
 
     public void jprFConnection(int fromID, int toID, String text) {
@@ -490,12 +523,34 @@ public class FNodeManager {
 
     }
 
+    public void displayGrid() {
+        double width = gc.getCanvas().getWidth();
+        double height = gc.getCanvas().getHeight();
+        double spacing = 100; //pixels
+
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(1);
+        gc.beginPath();
+
+        for (int x = 0; x < width; x += spacing) {
+            for (int y = 0; y < height; y += spacing) {
+                gc.moveTo(0, y);
+                gc.lineTo(width, y);
+                gc.moveTo(x, 0);
+                gc.lineTo(x, height);
+            }
+        }
+        gc.stroke();
+    }
+
     public void display() {
 
         //clear last screen
         Canvas canvas = gc.getCanvas();
         gc.setFill(clearScreenColor);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        //displayGrid();
 
         //draw connections
         for (FConnection fc : FConnectionMap.values())

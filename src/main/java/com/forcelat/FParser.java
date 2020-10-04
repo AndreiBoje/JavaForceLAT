@@ -39,16 +39,13 @@ public class FParser {
         ArrayList<String> rawLines = (ArrayList<String>) Arrays.stream(ta.getText().split("\n")).collect(Collectors.toList());
 
         fnm.clear();
-        //TODO: POOL ALL COMMANDS THEN EXECUTE IT
+
         try {
             for (String rawLine : rawLines) {
                 ArrayList<String> lineData = (ArrayList<String>) Arrays.stream(rawLine.split(" ")).collect(Collectors.toList());
-                //TODO: ability to add more options besides the default ones
-                //TODO: Tomorrow -> priority of command execution feature -> alter defs 0 -> add 1 -> other 2 priority
                 //parse add command
                 if (lineData.get(0).equals("add")) {
                     //check for args
-                    //TODO: Syntax: add -name A -pos 200,300 -text A (if -text not present,use -name as -text)
                     if (lineData.contains("-name") && lineData.contains("-pos")) {
                         int referenceTextIndex = lineData.indexOf("-name") + 1;
                         int posIndex = lineData.indexOf("-pos") + 1;
@@ -219,8 +216,34 @@ public class FParser {
                         fnm.selfFConnection(ID, txt);
                     }
                 }
-                //TODO: add set node to be start command
-                //TODO: add set node to be final command
+                //parse start command
+                if (lineData.get(0).equals("start")) {
+                    if (lineData.contains("-node")) {
+                        int nodesIndex = lineData.indexOf("-node") + 1;
+
+                        try {
+                            fnm.makeStart(lineData.get(nodesIndex));
+
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+                    }
+                }
+                //parse final command
+                if (lineData.get(0).equals("final")) {
+                    if (lineData.contains("-nodes")) {
+                        int nodesIndex = lineData.indexOf("-nodes") + 1;
+
+                        try {
+                            ArrayList<String> nodes = new ArrayList<>();
+                            int argsNo = lineData.get(nodesIndex).split(",").length;
+
+                            for (int i = 0; i < argsNo; i++)
+                                fnm.makeFinal(lineData.get(nodesIndex).split(",")[i]);
+
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+                    }
+                }
                 //TODO: add alter defaults command
             }
         } catch (IndexOutOfBoundsException e) {
