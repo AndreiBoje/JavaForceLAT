@@ -18,12 +18,10 @@ import java.util.TreeMap;
 class FNode {
     GraphicsContext gcFNode;
     Point2D loc;
-    Color color = Color.BLACK;
     int strokeWidth = 3;
-    double radius = 30;
-    double smallRadius = 25;
     Integer ID;
-    String txt, referenceTxt;
+    String fname;
+    FOptions opts;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
@@ -31,36 +29,35 @@ class FNode {
     boolean isFinal = false;
     boolean isStart = false;
 
-    public FNode(GraphicsContext gcFNode, Point2D location, int ID, String txt, String referenceTxt) {
+    public FNode(GraphicsContext gcFNode, Point2D location, int ID, String fname, FOptions opts) {
         this.gcFNode = gcFNode;
         this.loc = location;
         this.ID = ID;
-        this.txt = txt;
-        this.referenceTxt = referenceTxt;
+        this.fname = fname;
+        this.opts = opts;
     }
 
     public void draw() {
-        //draw text (placeholder for now!!!!)
-        gcFNode.setFill(Color.RED);
-        gcFNode.setFont(new Font("Calibri", 30));
+        gcFNode.setFill(opts.fNodeColor);
+        gcFNode.setFont(new Font("Calibri", opts.fNodeTextSize));
         gcFNode.setTextAlign(TextAlignment.CENTER);
         gcFNode.setTextBaseline(VPos.CENTER);
-        gcFNode.fillText(txt, loc.getX(), loc.getY());
+        gcFNode.fillText(fname, loc.getX(), loc.getY());
 
         //draw contour
-        gcFNode.setStroke(color);
+        gcFNode.setStroke(opts.fNodeColor);
         gcFNode.setLineWidth(strokeWidth);
-        gcFNode.strokeOval(loc.getX() - radius, loc.getY() - radius, radius * 2, radius * 2);
+        gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
 
         if (isFinal) {
-            gcFNode.strokeOval(loc.getX() - smallRadius, loc.getY() - smallRadius, smallRadius * 2, smallRadius * 2);
+            gcFNode.strokeOval(loc.getX() - opts.fNodeSmallRadius, loc.getY() - opts.fNodeSmallRadius, opts.fNodeSmallRadius * 2, opts.fNodeSmallRadius * 2);
         }
         if (isStart) {
-            double xArrowStart = loc.getX()-100;
+            double xArrowStart = loc.getX() - 100;
             double yArrowStart = loc.getY();
-            double xArrowEnd = loc.getX()-radius;
+            double xArrowEnd = loc.getX() - opts.fNodeRadius;
             double yArrowEnd = loc.getY();
-            UnidFConnection uc =  new UnidFConnection(gcFNode,new Point2D(xArrowStart,yArrowStart),new Point2D(xArrowEnd,yArrowEnd));
+            UnidFConnection uc = new UnidFConnection(gcFNode, new Point2D(xArrowStart, yArrowStart), new Point2D(xArrowEnd, yArrowEnd));
         }
     }
 }
@@ -72,6 +69,7 @@ abstract class FConnection {
     FNode fromFNode, toFNode;
     String textTo;
     String textFrom;
+    FOptions opts;
 
     public abstract void draw();
 
@@ -97,7 +95,7 @@ abstract class FConnection {
         double xArrowRight = Math.cos(angle - Math.PI / 2) * arrowWidth + xBase;
         double yArrowRight = Math.sin(angle - Math.PI / 2) * arrowWidth + yBase;
 
-        gcFConnection.setFill(color);
+        gcFConnection.setFill(opts.fConColor);
         gcFConnection.fillPolygon(new double[]{xArrowLeft, xArrowRight, xTip}, new double[]{yArrowLeft, yArrowRight, yTip}, 3);
     }
 
@@ -105,22 +103,24 @@ abstract class FConnection {
 
 class UnidFConnection extends FConnection {
 
-    public UnidFConnection(GraphicsContext gcFConnection,Point2D from,Point2D to){
+    public UnidFConnection(GraphicsContext gcFConnection, Point2D from, Point2D to) {
         //draw
         this.gcFConnection = gcFConnection;
-        Point2D mid = new Point2D((from.getX()+to.getX())/2,(to.getY()+from.getY())/2);
+        Point2D mid = new Point2D((from.getX() + to.getX()) / 2, (to.getY() + from.getY()) / 2);
         gcFConnection.beginPath();
         gcFConnection.setStroke(Color.BLACK);
-        gcFConnection.moveTo(from.getX(),from.getY());
-        gcFConnection.lineTo(to.getX(),to.getY());
+        gcFConnection.moveTo(from.getX(), from.getY());
+        gcFConnection.lineTo(to.getX(), to.getY());
         gcFConnection.stroke();
-        drawArrow(mid,0);
+        drawArrow(mid, 0);
     }
-    public UnidFConnection(GraphicsContext gcFConnection, FNode fromFNode, FNode toFNode, String text) {
+
+    public UnidFConnection(GraphicsContext gcFConnection, FNode fromFNode, FNode toFNode, String text, FOptions opts) {
         this.gcFConnection = gcFConnection;
         this.fromFNode = fromFNode;
         this.toFNode = toFNode;
         this.textFrom = text;
+        this.opts = opts;
     }
 
     @Override
@@ -131,31 +131,38 @@ class UnidFConnection extends FConnection {
 
         double angle = Math.atan2(distY, distX);
 
-        double xStart = Math.cos(angle - Math.PI) * fromFNode.radius + fromFNode.loc.getX();
-        double yStart = Math.sin(angle - Math.PI) * fromFNode.radius + fromFNode.loc.getY();
+        double xStart = Math.cos(angle - Math.PI) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yStart = Math.sin(angle - Math.PI) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xEnd = Math.cos(angle) * toFNode.radius + toFNode.loc.getX();
-        double yEnd = Math.sin(angle) * toFNode.radius + toFNode.loc.getY();
+        double xEnd = Math.cos(angle) * toFNode.opts.fNodeRadius + toFNode.loc.getX();
+        double yEnd = Math.sin(angle) * toFNode.opts.fNodeRadius + toFNode.loc.getY();
 
         double xArrow = (xStart + xEnd) / 2;
         double yArrow = (yStart + yEnd) / 2;
         Point2D arrowLoc = new Point2D(xArrow, yArrow);
 
-        double xText = Math.cos(angle + Math.PI / 2) * 20 + xArrow;
-        double yText = Math.sin(angle + Math.PI / 2) * 20 + yArrow;
+        double xText, yText;
+        if (!opts.fConFlipText) {
+            xText = Math.cos(angle + Math.PI / 2) * 20 + xArrow;
+            yText = Math.sin(angle + Math.PI / 2) * 20 + yArrow;
+        } else {
+            xText = Math.cos(angle - Math.PI / 2) * 20 + xArrow;
+            yText = Math.sin(angle - Math.PI / 2) * 20 + yArrow;
+        }
+
 
         //draw
-        gcFConnection.setFill(color);
+        gcFConnection.setFill(opts.fConColor);
         gcFConnection.setTextAlign(TextAlignment.CENTER);
         gcFConnection.setTextBaseline(VPos.CENTER);
-        gcFConnection.setFont(new Font("Calibri", 20));
+        gcFConnection.setFont(new Font("Calibri", opts.fConTextSize));
         gcFConnection.save();
-        Rotate r = new Rotate(0, xText, yText);
+        Rotate r = new Rotate(-opts.fConTextAngle, xText, yText);
         gcFConnection.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
         gcFConnection.fillText(textFrom, xText, yText);
         gcFConnection.restore();
         gcFConnection.beginPath();
-        gcFConnection.setStroke(color);
+        gcFConnection.setStroke(opts.fConColor);
         gcFConnection.setLineWidth(lineWidth);
         gcFConnection.moveTo(xStart, yStart);
         gcFConnection.lineTo(xEnd, yEnd);
@@ -187,11 +194,11 @@ class BidFConnection extends FConnection {
 
         //first arrow
 
-        double xStart = Math.cos(angleBase - Math.PI - angleApproach) * fromFNode.radius + fromFNode.loc.getX();
-        double yStart = Math.sin(angleBase - Math.PI - angleApproach) * fromFNode.radius + fromFNode.loc.getY();
+        double xStart = Math.cos(angleBase - Math.PI - angleApproach) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yStart = Math.sin(angleBase - Math.PI - angleApproach) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xEnd = Math.cos(angleBase + angleApproach) * toFNode.radius + toFNode.loc.getX();
-        double yEnd = Math.sin(angleBase + angleApproach) * toFNode.radius + toFNode.loc.getY();
+        double xEnd = Math.cos(angleBase + angleApproach) * toFNode.opts.fNodeRadius + toFNode.loc.getX();
+        double yEnd = Math.sin(angleBase + angleApproach) * toFNode.opts.fNodeRadius + toFNode.loc.getY();
 
         double xArrow = (xStart + xEnd) / 2;
         double yArrow = (yStart + yEnd) / 2;
@@ -199,11 +206,11 @@ class BidFConnection extends FConnection {
 
         //second arrow
 
-        double xStart2 = Math.cos(angleBase - Math.PI + angleApproach) * fromFNode.radius + fromFNode.loc.getX();
-        double yStart2 = Math.sin(angleBase - Math.PI + angleApproach) * fromFNode.radius + fromFNode.loc.getY();
+        double xStart2 = Math.cos(angleBase - Math.PI + angleApproach) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yStart2 = Math.sin(angleBase - Math.PI + angleApproach) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xEnd2 = Math.cos(angleBase - angleApproach) * toFNode.radius + toFNode.loc.getX();
-        double yEnd2 = Math.sin(angleBase - angleApproach) * toFNode.radius + toFNode.loc.getY();
+        double xEnd2 = Math.cos(angleBase - angleApproach) * toFNode.opts.fNodeRadius + toFNode.loc.getX();
+        double yEnd2 = Math.sin(angleBase - angleApproach) * toFNode.opts.fNodeRadius + toFNode.loc.getY();
 
         double xArrow2 = (xStart2 + xEnd2) / 2;
         double yArrow2 = (yStart2 + yEnd2) / 2;
@@ -254,17 +261,17 @@ class SelfFConnection extends FConnection {
 
         double angleApproach = Math.PI / 6;
 
-        double xBaseL = Math.cos(angleApproach - Math.PI / 2) * fromFNode.radius + fromFNode.loc.getX();
-        double yBaseL = Math.sin(angleApproach - Math.PI / 2) * fromFNode.radius + fromFNode.loc.getY();
+        double xBaseL = Math.cos(angleApproach - Math.PI / 2) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yBaseL = Math.sin(angleApproach - Math.PI / 2) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xBaseR = Math.cos(-angleApproach - Math.PI / 2) * fromFNode.radius + fromFNode.loc.getX();
-        double yBaseR = Math.sin(-angleApproach - Math.PI / 2) * fromFNode.radius + fromFNode.loc.getY();
+        double xBaseR = Math.cos(-angleApproach - Math.PI / 2) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yBaseR = Math.sin(-angleApproach - Math.PI / 2) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xCp1 = fromFNode.loc.getX() + fromFNode.radius * 1.8;
-        double yCp1 = fromFNode.loc.getY() - fromFNode.radius * 2.8;
+        double xCp1 = fromFNode.loc.getX() + fromFNode.opts.fNodeRadius * 1.8;
+        double yCp1 = fromFNode.loc.getY() - fromFNode.opts.fNodeRadius * 2.8;
 
-        double xCp2 = fromFNode.loc.getX() - fromFNode.radius * 1.8;
-        double yCp2 = fromFNode.loc.getY() - fromFNode.radius * 2.8;
+        double xCp2 = fromFNode.loc.getX() - fromFNode.opts.fNodeRadius * 1.8;
+        double yCp2 = fromFNode.loc.getY() - fromFNode.opts.fNodeRadius * 2.8;
 
         double xArrow = Math.cos(-angleApproach - Math.PI / 2) * 10 + xBaseR;
         double yArrow = Math.sin(-angleApproach - Math.PI / 2) * 10 + yBaseR;
@@ -328,13 +335,13 @@ class JprFConnection extends FConnection {
 
         double angle = Math.atan2(distY, distX);
         double angleRise = Math.PI / 4;
-        double extendFactor = 100;
+        double extendFactor = 100; //bug on big radii
 
-        double xStart = Math.cos(angle + Math.PI - angleRise) * fromFNode.radius + fromFNode.loc.getX();
-        double yStart = Math.sin(angle + Math.PI - angleRise) * fromFNode.radius + fromFNode.loc.getY();
+        double xStart = Math.cos(angle + Math.PI - angleRise) * fromFNode.opts.fNodeRadius + fromFNode.loc.getX();
+        double yStart = Math.sin(angle + Math.PI - angleRise) * fromFNode.opts.fNodeRadius + fromFNode.loc.getY();
 
-        double xEnd = Math.cos(angle + angleRise) * toFNode.radius + toFNode.loc.getX();
-        double yEnd = Math.sin(angle + angleRise) * toFNode.radius + toFNode.loc.getY();
+        double xEnd = Math.cos(angle + angleRise) * toFNode.opts.fNodeRadius + toFNode.loc.getX();
+        double yEnd = Math.sin(angle + angleRise) * toFNode.opts.fNodeRadius + toFNode.loc.getY();
 
         double xHandleL = Math.cos(angle + Math.PI - angleRise) * extendFactor + fromFNode.loc.getX();
         double yHandleL = Math.sin(angle + Math.PI - angleRise) * extendFactor + fromFNode.loc.getY();
@@ -443,9 +450,9 @@ public class FNodeManager {
         });
     }
 
-    public void addFNode(double xPos, double yPos, String txt, String referenceTxt) {
+    public void addFNode(double xPos, double yPos, String fname, FOptions opts) {
         Point2D loc = new Point2D(xPos, yPos);
-        FNode fn = new FNode(gc, loc, FNodeIDGiver, txt, referenceTxt);
+        FNode fn = new FNode(gc, loc, FNodeIDGiver, fname, opts);
         FNodeMap.put(FNodeIDGiver, fn);
         FNodeIDGiver++;
     }
@@ -454,7 +461,7 @@ public class FNodeManager {
 
         //ALSO BY TEXTREFERENCE? MAYBE
         for (FNode fn : FNodeMap.values())
-            if (fn.referenceTxt.equals(txt) || fn.txt.equals(txt))
+            if (fn.opts.fNodeAlias.equals(txt) || fn.fname.equals(txt))
                 return fn.ID;
         return -1;
     }
@@ -484,13 +491,13 @@ public class FNodeManager {
         FConnectionMap.put(key, fc);
     }
 
-    public void unidFConnection(int fromID, int toID, String text) {
+    public void unidFConnection(int fromID, int toID, String text, FOptions opts) {
         FNode fromFNode = FNodeMap.get(fromID);
         FNode toFNode = FNodeMap.get(toID);
 
         if (fromFNode == null || toFNode == null) return;
 
-        FConnection fc = new UnidFConnection(gc, fromFNode, toFNode, text);
+        FConnection fc = new UnidFConnection(gc, fromFNode, toFNode, text, opts);
 
         fromFNode.unidConnectionTo.add(toID);
         Pair<Integer, Integer> key = new Pair<>(fromID, toID);
