@@ -10,9 +10,12 @@ public class FOptions {
     public String fNodeAlias = " ";
     public Color fNodeColor = Color.BLACK;
     public double fNodeTextSize=30;
+    public double fNodeWidth =3;
     //FConnections
     public Color fConColor = Color.BLACK;
     public double fConTextAngle = 0;
     public double fConTextSize =20;
     public boolean fConFlipText =false;
+    public double fConTextHeight = 20;
+    public double fConLineWidth =3;
 }

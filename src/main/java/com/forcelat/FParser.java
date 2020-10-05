@@ -70,43 +70,7 @@ public class FParser {
                         }
 
                         //OPTIONS START HERE!!!!
-                        //fnode alias
-                        String fAlias = opts.fNodeAlias;
-                        if (lineData.contains("-alias")) {
-                            int aliasIndex = lineData.indexOf("-alias") + 1;
-                            fAlias = lineData.get(aliasIndex);
-                        }
-                        //fnode radius
-                        double fRadius = opts.fNodeRadius;
-                        if (lineData.contains("-radius")) {
-                            int radiusIndex = lineData.indexOf("-radius") + 1;
-                            try {
-                                fRadius = Double.parseDouble(lineData.get(radiusIndex));
-                            } catch (NumberFormatException e) {
-                            }
-                        }
-                        //fnode color
-                        Color fColor = opts.fNodeColor;
-                        if (lineData.contains("-color")) {
-                            int colorIndex = lineData.indexOf("-color") + 1;
-                            try {
-                                fColor = Color.web(lineData.get(colorIndex));
-                            } catch (IllegalArgumentException e) {
-                            }
-                        }
-                        //fnode fontSize
-                        double fNodeTextSize = opts.fNodeTextSize;
-                        if (lineData.contains("-tsize")) {
-                            int textSizeIndex = lineData.indexOf("-tsize") + 1;
-                            try {
-                                fNodeTextSize = Double.parseDouble(lineData.get(textSizeIndex));
-                            } catch (NumberFormatException e) {
-                            }
-                        }
-                        opts.fNodeAlias = fAlias;
-                        opts.fNodeRadius = fRadius;
-                        opts.fNodeColor = fColor;
-                        opts.fNodeTextSize = fNodeTextSize;
+                       genericFNodeOptionsParser(lineData,opts);
 
                         fnm.addFNode(xPos, yPos, fName, opts);
                     }
@@ -116,32 +80,36 @@ public class FParser {
                     //check for args
                     if (lineData.contains("-nodes")) {
                         FOptions opts = new FOptions();
-                        int nodesIndex = lineData.indexOf("-nodes") + 1;
-                        int txtIndex = lineData.indexOf("-text") + 1;
-
+                        //fnodes
+                        int namesIndex = lineData.indexOf("-nodes") + 1;
                         int argsNo = -1;
                         ArrayList<Integer> IDs = new ArrayList<>();
-                        ArrayList<String> txts = new ArrayList<>();
                         try {
-                            argsNo = lineData.get(nodesIndex).split(",").length;
-
+                            String[] names = lineData.get(namesIndex).split(",");
+                            argsNo = names.length;
                             if (argsNo >= 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(lineData.get(nodesIndex).split(",")[i]));
-
+                                    IDs.add(fnm.getFNodeIDByTxt(names[i]));
                         } catch (IndexOutOfBoundsException e) {
                         }
 
+                        //ftexts (semi required cus of the code's structure)
+                        int textsIndex = lineData.indexOf("-text") + 1;
+                        ArrayList<String> conTexts = new ArrayList<>();
                         if (lineData.contains("-text")) {
                             for (int i = 0; i < argsNo - 1; i++)
-                                txts.add(lineData.get(txtIndex + i));
+                                conTexts.add(lineData.get(textsIndex + i));
                         }
 
+                        //OPTIONS START HERE!!!
+                        //generic options parser,pass opts by ref
+                        genericFConFOptionsParser(lineData, opts);
+
                         for (int i = 0; i < argsNo - 1; i++)
-                            if (txts.size() != 0)
-                                fnm.unidFConnection(IDs.get(i), IDs.get(i + 1), txts.get(i),opts);
+                            if (conTexts.size() != 0)
+                                fnm.unidFConnection(IDs.get(i), IDs.get(i + 1), conTexts.get(i), opts);
                             else
-                                fnm.unidFConnection(IDs.get(i), IDs.get(i + 1), " ",opts);
+                                fnm.unidFConnection(IDs.get(i), IDs.get(i + 1), " ", opts);
 
                     }
 
@@ -172,81 +140,49 @@ public class FParser {
                                 conTexts.add(lineData.get(textsIndex + i));
                         }
                         //OPTIONS START HERE!!!
-                        //fConnnectionColor
-                        Color fConColor = opts.fConColor;
-                        if(lineData.contains("-color")){
-                            int colorIndex = lineData.indexOf("-color") + 1;
-                            try {
-                                fConColor = Color.web(lineData.get(colorIndex));
-                            } catch (IllegalArgumentException e) {
-                            }
-                        }
-
-                        //fConTextAngle
-                        double fConTextAngle = opts.fConTextAngle;
-                        if (lineData.contains("-tangle")) {
-                            int textAngleIndex = lineData.indexOf("-tangle") + 1;
-                            try {
-                                fConTextAngle = Double.parseDouble(lineData.get(textAngleIndex));
-                            } catch (NumberFormatException e) {
-                            }
-                        }
-
-                        //fConTextSize
-                        double fConTextSize = opts.fConTextSize;
-                        if (lineData.contains("-tsize")) {
-                            int textSizeIndex = lineData.indexOf("-tsize") + 1;
-                            try {
-                                fConTextSize = Double.parseDouble(lineData.get(textSizeIndex));
-                            } catch (NumberFormatException e) {
-                            }
-                        }
-                        //fConFlipText
-                        boolean fConFlipText = opts.fConFlipText;
-                        if(lineData.contains("-tflip"))
-                            fConFlipText = true;
-
-                        opts.fConFlipText = fConFlipText;
-                        opts.fConColor = fConColor;
-                        opts.fConTextAngle = fConTextAngle;
-                        opts.fConTextSize = fConTextSize;
+                        genericFConFOptionsParser(lineData, opts);
 
                         for (int i = 0; i < argsNo - 1; i++)
                             if (conTexts.size() != 0)
-                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), conTexts.get(i),opts);
+                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), conTexts.get(i), opts);
                             else
-                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), " ",opts);
+                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), " ", opts);
                     }
                 }
                 //parse bcon command
                 if (lineData.get(0).equals("bcon")) {
                     //check for args
                     if (lineData.contains("-nodes")) {
-                        int nodesIndex = lineData.indexOf("-nodes") + 1;
-                        int txtIndex = lineData.indexOf("-text") + 1;
-
+                        FOptions opts = new FOptions();
+                        //fnodes
                         int argsNo = -1;
+                        int namesIndex = lineData.indexOf("-nodes") + 1;
                         ArrayList<Integer> IDs = new ArrayList<>();
-                        ArrayList<String> txts = new ArrayList<>();
+                        ArrayList<String> texts = new ArrayList<>();
                         try {
-                            argsNo = lineData.get(nodesIndex).split(",").length;
+                            argsNo = lineData.get(namesIndex).split(",").length;
 
                             if (argsNo == 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(lineData.get(nodesIndex).split(",")[i]));
+                                    IDs.add(fnm.getFNodeIDByTxt(lineData.get(namesIndex).split(",")[i]));
 
                         } catch (IndexOutOfBoundsException e) {
                         }
-
+                        //ftext
+                        int textsIndex = -1;
                         if (lineData.contains("-text")) {
-                            txts.add(lineData.get(txtIndex));
-                            txts.add(lineData.get(txtIndex + 1));
+                            textsIndex = lineData.indexOf("-text") + 1;
+                            texts.add(lineData.get(textsIndex));
+                            texts.add(lineData.get(textsIndex + 1));
                         }
 
-                        if (txts.size() != 0)
-                            fnm.bidFConnection(IDs.get(0), IDs.get(1), txts.get(0), txts.get(1));
+                        //OPTIONS START HERE!!!
+                        genericFConFOptionsParser(lineData,opts);
+
+                        if (texts.size() != 0)
+                            fnm.bidFConnection(IDs.get(0), IDs.get(1), texts.get(0), texts.get(1),opts);
                         else
-                            fnm.bidFConnection(IDs.get(0), IDs.get(1), " ", " ");
+                            fnm.bidFConnection(IDs.get(0), IDs.get(1), " ", " ",opts);
                     }
                 }
                 //parse jpr command
@@ -324,11 +260,127 @@ public class FParser {
                         }
                     }
                 }
-                //TODO: add alter defaults command
             }
         } catch (IndexOutOfBoundsException e) {
             //   System.out.println("ERROR: There's been an indexing error! Are there enough arguments?");
         }
         fnm.display();
+    }
+
+    public void genericFNodeOptionsParser(ArrayList<String> lineData, FOptions opts) {
+        //fnode alias
+        String fAlias = opts.fNodeAlias;
+        if (lineData.contains("-alias")) {
+            int aliasIndex = lineData.indexOf("-alias") + 1;
+            fAlias = lineData.get(aliasIndex);
+        }
+        //fnode radius
+        double fRadius = opts.fNodeRadius;
+        if (lineData.contains("-radius")) {
+            int radiusIndex = lineData.indexOf("-radius") + 1;
+            try {
+                fRadius = Double.parseDouble(lineData.get(radiusIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+        //fnode color
+        Color fColor = opts.fNodeColor;
+        if (lineData.contains("-color")) {
+            int colorIndex = lineData.indexOf("-color") + 1;
+            try {
+                fColor = Color.web(lineData.get(colorIndex));
+            } catch (IllegalArgumentException e) {
+            }
+        }
+        //fnode fontSize
+        double fNodeTextSize = opts.fNodeTextSize;
+        if (lineData.contains("-tsize")) {
+            int textSizeIndex = lineData.indexOf("-tsize") + 1;
+            try {
+                fNodeTextSize = Double.parseDouble(lineData.get(textSizeIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fnode width
+        double fNodeWidth = opts.fNodeWidth;
+        if (lineData.contains("-width")) {
+            int fNodeWidthIndex = lineData.indexOf("-width") + 1;
+            try {
+                fNodeWidth = Double.parseDouble(lineData.get(fNodeWidthIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        opts.fNodeWidth = fNodeWidth;
+        opts.fNodeAlias = fAlias;
+        opts.fNodeRadius = fRadius;
+        opts.fNodeColor = fColor;
+        opts.fNodeTextSize = fNodeTextSize;
+
+    }
+
+    public void genericFConFOptionsParser(ArrayList<String> lineData, FOptions opts) {
+        //fConnnectionColor
+        Color fConColor = opts.fConColor;
+        if (lineData.contains("-color")) {
+            int colorIndex = lineData.indexOf("-color") + 1;
+            try {
+                fConColor = Color.web(lineData.get(colorIndex));
+            } catch (IllegalArgumentException e) {
+            }
+        }
+
+        //fConTextAngle
+        double fConTextAngle = opts.fConTextAngle;
+        if (lineData.contains("-tangle")) {
+            int textAngleIndex = lineData.indexOf("-tangle") + 1;
+            try {
+                fConTextAngle = Double.parseDouble(lineData.get(textAngleIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fConTextSize
+        double fConTextSize = opts.fConTextSize;
+        if (lineData.contains("-tsize")) {
+            int textSizeIndex = lineData.indexOf("-tsize") + 1;
+            try {
+                fConTextSize = Double.parseDouble(lineData.get(textSizeIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fConFlipText
+        boolean fConFlipText = opts.fConFlipText;
+        if (lineData.contains("-tflip"))
+            fConFlipText = true;
+
+        //fConTextHeight
+        double fConTextHeight = opts.fConTextHeight;
+        if (lineData.contains("-theight")) {
+            int textHeightIndex = lineData.indexOf("-theight") + 1;
+            try {
+                fConTextHeight = Double.parseDouble(lineData.get(textHeightIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fConLineWidth
+        double fConLineWidth = opts.fConLineWidth;
+        if (lineData.contains("-lwidth")) {
+            int lineWidthIndex = lineData.indexOf("-lwidth") + 1;
+            try {
+                fConLineWidth = Double.parseDouble(lineData.get(lineWidthIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        opts.fConLineWidth = fConLineWidth;
+        opts.fConTextHeight = fConTextHeight;
+        opts.fConFlipText = fConFlipText;
+        opts.fConColor = fConColor;
+        opts.fConTextAngle = fConTextAngle;
+        opts.fConTextSize = fConTextSize;
     }
 }
