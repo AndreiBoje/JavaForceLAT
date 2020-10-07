@@ -50,7 +50,7 @@ public class Main extends Application {
         fnm.display();*/
 
         ScrollPane sp = new ScrollPane(canvas);
-        sp.setPannable(true);
+        //sp.setPannable(true);
         HBox vb = new HBox(sp,ta);
         Scene scene = new Scene(vb, width, height);
         window.setScene(scene);

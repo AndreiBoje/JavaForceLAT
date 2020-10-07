@@ -9,19 +9,6 @@ import java.util.stream.Collectors;
 
 public class FParser {
 
-    //TODO: Operator tokens
-    //ucon
-    //bcon
-    //scon
-    //jcon
-    //add
-    //everything else is invalid
-    //TODO: General syntax in use
-    //add -id 0 -pos 200,200 -txt "This is text"           <- obligatory for now (and only ones)
-    //ucon -id 0,1 -txt "This is text"                     <- idem
-    //bcon -id 0,1 -txt "This is toTxt" "This is fromTxt"  <- idem
-    //scon -id 0 -txt "This is text"                       <- idem
-    //jcon -id 0,1 -txt "This is text"                     <- idem
     private final TextArea ta;
     private final FNodeManager fnm;
 
@@ -31,7 +18,7 @@ public class FParser {
     }
 
     public void beginFParse() {
-        //fnm.initInteractivity();
+        fnm.initInteractivity();
         ta.setOnKeyTyped(e -> loopFParse());
     }
 
@@ -70,7 +57,7 @@ public class FParser {
                         }
 
                         //OPTIONS START HERE!!!!
-                       genericFNodeOptionsParser(lineData,opts);
+                        genericFNodeOptionsParser(lineData, opts);
 
                         fnm.addFNode(xPos, yPos, fName, opts);
                     }
@@ -103,7 +90,11 @@ public class FParser {
 
                         //OPTIONS START HERE!!!
                         //generic options parser,pass opts by ref
-                        genericFConFOptionsParser(lineData, opts);
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-arrow","-color", "-tangle", "-tsize", "-tflip", "-theight", "-lwidth"};
+
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
 
                         for (int i = 0; i < argsNo - 1; i++)
                             if (conTexts.size() != 0)
@@ -140,13 +131,26 @@ public class FParser {
                                 conTexts.add(lineData.get(textsIndex + i));
                         }
                         //OPTIONS START HERE!!!
-                        genericFConFOptionsParser(lineData, opts);
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-arrow","-color", "-tangle", "-tsize", "-tflip", "-theight", "-lwidth"};
 
-                        for (int i = 0; i < argsNo - 1; i++)
-                            if (conTexts.size() != 0)
-                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), conTexts.get(i), opts);
-                            else
-                                fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), " ", opts);
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
+
+                        //UCON SPECIFIC -flip
+                        if (lineData.contains("-flip")) {
+                            for (int i = 0; i < argsNo - 1; i++)
+                                if (conTexts.size() != 0)
+                                    fnm.unidFConnection(IDs.get(i + 1), IDs.get(0), conTexts.get(i), opts);
+                                else
+                                    fnm.unidFConnection(IDs.get(i + 1), IDs.get(0), " ", opts);
+                        } else {
+                            for (int i = 0; i < argsNo - 1; i++)
+                                if (conTexts.size() != 0)
+                                    fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), conTexts.get(i), opts);
+                                else
+                                    fnm.unidFConnection(IDs.get(0), IDs.get(i + 1), " ", opts);
+                        }
                     }
                 }
                 //parse bcon command
@@ -177,47 +181,61 @@ public class FParser {
                         }
 
                         //OPTIONS START HERE!!!
-                        genericFConFOptionsParser(lineData,opts);
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-arrow","-color", "-tangle", "-tsize", "-tflip", "-theight", "-lwidth"};
+
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
 
                         if (texts.size() != 0)
-                            fnm.bidFConnection(IDs.get(0), IDs.get(1), texts.get(0), texts.get(1),opts);
+                            fnm.bidFConnection(IDs.get(0), IDs.get(1), texts.get(0), texts.get(1), opts);
                         else
-                            fnm.bidFConnection(IDs.get(0), IDs.get(1), " ", " ",opts);
+                            fnm.bidFConnection(IDs.get(0), IDs.get(1), " ", " ", opts);
                     }
                 }
                 //parse jpr command
                 if (lineData.get(0).equals("jpr")) {
                     if (lineData.contains("-nodes")) {
-                        int nodesIndex = lineData.indexOf("-nodes") + 1;
-                        int txtIndex = lineData.indexOf("-text") + 1;
-
+                        FOptions opts = new FOptions();
+                        //fnodes
+                        int namesIndex = lineData.indexOf("-nodes") + 1;
                         int argsNo = -1;
                         ArrayList<Integer> IDs = new ArrayList<>();
-                        ArrayList<String> txts = new ArrayList<>();
                         try {
-                            argsNo = lineData.get(nodesIndex).split(",").length;
-
-                            if (argsNo == 2)
+                            String[] names = lineData.get(namesIndex).split(",");
+                            argsNo = names.length;
+                            if (argsNo >= 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(lineData.get(nodesIndex).split(",")[i]));
-
+                                    IDs.add(fnm.getFNodeIDByTxt(names[i]));
                         } catch (IndexOutOfBoundsException e) {
                         }
 
-                        if (lineData.contains("-text"))
-                            txts.add(lineData.get(txtIndex));
+                        //ftexts (semi required cus of the code's structure)
+                        int textsIndex = lineData.indexOf("-text") + 1;
+                        ArrayList<String> conTexts = new ArrayList<>();
+                        if (lineData.contains("-text")) {
+                            for (int i = 0; i < argsNo - 1; i++)
+                                conTexts.add(lineData.get(textsIndex + i));
+                        }
+                        //OPTIONS START HERE!!!
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-arrow","-color", "-tangle", "-rangle", "-extf", "-tsize", "-tflip", "-theight", "-lwidth"};
 
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
 
-                        if (txts.size() != 0)
-                            fnm.jprFConnection(IDs.get(0), IDs.get(1), txts.get(0));
-                        else
-                            fnm.jprFConnection(IDs.get(0), IDs.get(1), " ");
+                        for (int i = 0; i < argsNo - 1; i++)
+                            if (conTexts.size() != 0)
+                                fnm.jprFConnection(IDs.get(0), IDs.get(i + 1), conTexts.get(i), opts);
+                            else
+                                fnm.jprFConnection(IDs.get(0), IDs.get(i + 1), " ", opts);
                     }
                 }
                 //parse self command
                 if (lineData.get(0).equals("self")) {
                     //check for args
                     if (lineData.contains("-node")) {
+                        FOptions opts = new FOptions();
                         int nodeIndex = lineData.indexOf("-node") + 1;
                         int txtIndex = lineData.indexOf("-text") + 1;
 
@@ -228,36 +246,46 @@ public class FParser {
                         if (lineData.contains("-text"))
                             txt = lineData.get(txtIndex);
 
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-color", "-angle", "-tangle", "-tsize", "-tflip", "-theight", "-lwidth"};
 
-                        fnm.selfFConnection(ID, txt);
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
+
+                        fnm.selfFConnection(ID, txt, opts);
                     }
                 }
                 //parse start command
                 if (lineData.get(0).equals("start")) {
                     if (lineData.contains("-node")) {
+                        FOptions opts = new FOptions();
+
                         int nodesIndex = lineData.indexOf("-node") + 1;
 
-                        try {
-                            fnm.makeStart(lineData.get(nodesIndex));
+                        ArrayList<String> checkForTokens = new ArrayList<>();
+                        String[] strings = {"-length", "-angle", "-lwidth"};
 
-                        } catch (IndexOutOfBoundsException e) {
-                        }
+                        checkForTokens.addAll(Arrays.asList(strings));
+                        genericFConFOptionsParser(lineData, opts, checkForTokens);
+                        fnm.makeStart(lineData.get(nodesIndex), opts);
+
                     }
                 }
                 //parse final command
                 if (lineData.get(0).equals("final")) {
                     if (lineData.contains("-nodes")) {
+                        FOptions opts = new FOptions();
+
                         int nodesIndex = lineData.indexOf("-nodes") + 1;
-
+                        ArrayList<String> nodes = new ArrayList<>();
+                        int argsNo = -1;
                         try {
-                            ArrayList<String> nodes = new ArrayList<>();
-                            int argsNo = lineData.get(nodesIndex).split(",").length;
-
-                            for (int i = 0; i < argsNo; i++)
-                                fnm.makeFinal(lineData.get(nodesIndex).split(",")[i]);
-
+                            argsNo = lineData.get(nodesIndex).split(",").length;
                         } catch (IndexOutOfBoundsException e) {
                         }
+
+                        for (int i = 0; i < argsNo; i++)
+                            fnm.makeFinal(lineData.get(nodesIndex).split(",")[i]);
                     }
                 }
             }
@@ -320,10 +348,60 @@ public class FParser {
 
     }
 
-    public void genericFConFOptionsParser(ArrayList<String> lineData, FOptions opts) {
+    public void genericFConFOptionsParser(ArrayList<String> lineData, FOptions opts, ArrayList<String> scanForTokens) {
+
+        //fCon start node length
+        double fConStartLength = opts.fConStartLength;
+        if (scanForTokens.contains("-length") && lineData.contains("-length")) {
+            int startLengthIndex = lineData.indexOf("-length") + 1;
+            try {
+                fConStartLength = Double.parseDouble(lineData.get(startLengthIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fCon start node length
+        double fConStartAngle = opts.fConStartAngle;
+        if (scanForTokens.contains("-angle") && lineData.contains("-angle")) {
+            int startAngleIndex = lineData.indexOf("-angle") + 1;
+            try {
+                fConStartAngle = Double.parseDouble(lineData.get(startAngleIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fCon start node length
+        double fConSelfAngle = opts.fConSelfAngle;
+        if (scanForTokens.contains("-angle") && lineData.contains("-angle")) {
+            int selfAngleIndex = lineData.indexOf("-angle") + 1;
+            try {
+                fConSelfAngle = Double.parseDouble(lineData.get(selfAngleIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        //fCon rise angle
+        double fConRiseAngle = opts.fConRiseAngle;
+        if (scanForTokens.contains("-rangle") && lineData.contains("-rangle")) {
+            int riseAngleIndex = lineData.indexOf("-rangle") + 1;
+            try {
+                fConRiseAngle = Double.parseDouble(lineData.get(riseAngleIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+        //fCon extend factor
+        double fConExtendFactor = opts.fConExtendFactor;
+        if (scanForTokens.contains("-extf") && lineData.contains("-extf")) {
+            int extIndex = lineData.indexOf("-extf") + 1;
+            try {
+                fConExtendFactor = Double.parseDouble(lineData.get(extIndex));
+            } catch (NumberFormatException e) {
+            }
+        }
+
         //fConnnectionColor
         Color fConColor = opts.fConColor;
-        if (lineData.contains("-color")) {
+        if (scanForTokens.contains("-color") && lineData.contains("-color")) {
             int colorIndex = lineData.indexOf("-color") + 1;
             try {
                 fConColor = Color.web(lineData.get(colorIndex));
@@ -333,7 +411,7 @@ public class FParser {
 
         //fConTextAngle
         double fConTextAngle = opts.fConTextAngle;
-        if (lineData.contains("-tangle")) {
+        if (scanForTokens.contains("-tangle") && lineData.contains("-tangle")) {
             int textAngleIndex = lineData.indexOf("-tangle") + 1;
             try {
                 fConTextAngle = Double.parseDouble(lineData.get(textAngleIndex));
@@ -343,7 +421,7 @@ public class FParser {
 
         //fConTextSize
         double fConTextSize = opts.fConTextSize;
-        if (lineData.contains("-tsize")) {
+        if (scanForTokens.contains("-tsize") && lineData.contains("-tsize")) {
             int textSizeIndex = lineData.indexOf("-tsize") + 1;
             try {
                 fConTextSize = Double.parseDouble(lineData.get(textSizeIndex));
@@ -353,12 +431,12 @@ public class FParser {
 
         //fConFlipText
         boolean fConFlipText = opts.fConFlipText;
-        if (lineData.contains("-tflip"))
+        if (scanForTokens.contains("-tflip") && lineData.contains("-tflip"))
             fConFlipText = true;
 
         //fConTextHeight
         double fConTextHeight = opts.fConTextHeight;
-        if (lineData.contains("-theight")) {
+        if (scanForTokens.contains("-theight") && lineData.contains("-theight")) {
             int textHeightIndex = lineData.indexOf("-theight") + 1;
             try {
                 fConTextHeight = Double.parseDouble(lineData.get(textHeightIndex));
@@ -368,7 +446,7 @@ public class FParser {
 
         //fConLineWidth
         double fConLineWidth = opts.fConLineWidth;
-        if (lineData.contains("-lwidth")) {
+        if (scanForTokens.contains("-lwidth") && lineData.contains("-lwidth")) {
             int lineWidthIndex = lineData.indexOf("-lwidth") + 1;
             try {
                 fConLineWidth = Double.parseDouble(lineData.get(lineWidthIndex));
@@ -376,11 +454,22 @@ public class FParser {
             }
         }
 
+        //fConHasArrow
+        boolean fConHasArrow = opts.fConHasArrow;
+        if (scanForTokens.contains("-arrow") && lineData.contains("-arrow"))
+            fConHasArrow = true;
+
+        opts.fConHasArrow = fConHasArrow;
+        opts.fConSelfAngle = fConSelfAngle;
+        opts.fConStartAngle = fConStartAngle;
+        opts.fConStartLength = fConStartLength;
         opts.fConLineWidth = fConLineWidth;
         opts.fConTextHeight = fConTextHeight;
         opts.fConFlipText = fConFlipText;
         opts.fConColor = fConColor;
         opts.fConTextAngle = fConTextAngle;
         opts.fConTextSize = fConTextSize;
+        opts.fConExtendFactor = fConExtendFactor;
+        opts.fConRiseAngle = fConRiseAngle;
     }
 }
