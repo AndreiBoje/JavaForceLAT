@@ -4,12 +4,14 @@ import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.util.Pair;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
@@ -43,11 +45,6 @@ class FNode {
         gcFNode.setTextBaseline(VPos.CENTER);
         gcFNode.fillText(fname, loc.getX(), loc.getY());
 
-        //draw contour
-        gcFNode.setStroke(opts.fNodeColor);
-        gcFNode.setLineWidth(opts.fNodeWidth);
-        gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
-
         if (isFinal) {
             gcFNode.strokeOval(loc.getX() - opts.fNodeSmallRadius, loc.getY() - opts.fNodeSmallRadius, opts.fNodeSmallRadius * 2, opts.fNodeSmallRadius * 2);
         }
@@ -62,6 +59,11 @@ class FNode {
 
             new UnidFConnection(gcFNode, new Point2D(xStart, yStart), new Point2D(xEnd, yEnd), opts);
         }
+        //draw contour
+        gcFNode.setStroke(opts.fNodeColor);
+        gcFNode.setLineWidth(opts.fNodeWidth);
+        gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
+
     }
 }
 
@@ -107,7 +109,7 @@ class UnidFConnection extends FConnection {
     public UnidFConnection(GraphicsContext gcFConnection, Point2D from, Point2D to, FOptions opts) {
         //draw
         this.opts = opts;
-        this.opts.fConColor = this.opts.fNodeColor;
+        //this.opts.fConColor = this.opts.fNodeColor;
         this.gcFConnection = gcFConnection;
         Point2D mid = new Point2D((from.getX() + to.getX()) / 2, (to.getY() + from.getY()) / 2);
         gcFConnection.beginPath();
@@ -419,25 +421,68 @@ public class FNodeManager {
     //defaults
 
     private int FNodeIDGiver = 0;
-    private Color clearScreenColor = Color.WHITE;
+    private final Color clearScreenColor = Color.WHITE;
     private final GraphicsContext gc;
+    private final ScrollPane sp;
     private final TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
+    private final HashSet<String> encounteredFNodeNames = new HashSet<>();
+    public HashMap<String, FOptions> encounteredFNodeOptions = new HashMap<>();
     private final HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
     private int selectedFNodeID = -1;
 
-    public FNodeManager(GraphicsContext gc) {
+    public FNodeManager(GraphicsContext gc, ScrollPane sp) {
         this.gc = gc;
+        this.sp = sp;
+        //just for screen clear
+        display();
+    }
+
+    public void putFNode(String e, FOptions o) {
+        encounteredFNodeNames.add(e);
+        encounteredFNodeOptions.put(e, o);
+    }
+
+    public void populateWithFNodes(double xDefault,double yDefault) {
+        ArrayList<Integer> todel = new ArrayList<>();
+
+        for (String fName : encounteredFNodeNames) {
+            int id  = getFNodeIDByTxt(fName);
+            if (!FNodeMap.containsKey(id)) {
+                addFNode(xDefault, yDefault, fName, encounteredFNodeOptions.get(fName));
+            } else {
+                FNodeMap.get(id).opts = encounteredFNodeOptions.get(fName);
+            }
+        }
+
+        for (FNode fn : FNodeMap.values()) {
+            if (!encounteredFNodeNames.contains(fn.fname)) {
+                todel.add(fn.ID);
+            }
+        }
+
+        for (int i : todel)
+            FNodeMap.remove(i);
+        encounteredFNodeNames.clear();
     }
 
     public void clear() {
-        FNodeMap.clear();
         FConnectionMap.clear();
     }
 
     public void initInteractivity() {
+        sp.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.A) {
+                if (!sp.isPannable())
+                    sp.setPannable(true);
+                else
+                    sp.setPannable(false);
+            }
+        });
+
         Canvas canvas = gc.getCanvas();
 
         canvas.setOnMouseDragged(e -> {
+            if (sp.isPannable()) return;
             //get nearest node ID in range HARDCODED: 30 (radius default)
             double searchRadius = 30;
             Point2D cursorLoc = new Point2D(e.getX(), e.getY());
@@ -494,10 +539,8 @@ public class FNodeManager {
     }
 
     public int getFNodeIDByTxt(String txt) {
-
-        //ALSO BY TEXTREFERENCE? MAYBE
         for (FNode fn : FNodeMap.values())
-            if (fn.opts.fNodeAlias.equals(txt) || fn.fname.equals(txt))
+            if (fn.fname.equals(txt))
                 return fn.ID;
         return -1;
     }
@@ -515,6 +558,7 @@ public class FNodeManager {
             fn.opts.fConStartLength = opts.fConStartLength;
             fn.opts.fConStartAngle = opts.fConStartAngle;
             fn.opts.fConLineWidth = opts.fConLineWidth;
+            fn.opts.fConColor = opts.fConColor;
         }
     }
 
