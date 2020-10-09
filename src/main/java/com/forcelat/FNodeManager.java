@@ -11,6 +11,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.util.Pair;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,11 +40,13 @@ class FNode {
     }
 
     public void draw() {
-        gcFNode.setFill(opts.fNodeColor);
-        gcFNode.setFont(new Font("Calibri", opts.fNodeTextSize));
-        gcFNode.setTextAlign(TextAlignment.CENTER);
-        gcFNode.setTextBaseline(VPos.CENTER);
-        gcFNode.fillText(fname, loc.getX(), loc.getY());
+        if (opts.fNodeShowText) {
+            gcFNode.setFill(opts.fNodeColor);
+            gcFNode.setFont(new Font("Calibri", opts.fNodeTextSize));
+            gcFNode.setTextAlign(TextAlignment.CENTER);
+            gcFNode.setTextBaseline(VPos.CENTER);
+            gcFNode.fillText(fname, loc.getX(), loc.getY());
+        }
 
         if (isFinal) {
             gcFNode.strokeOval(loc.getX() - opts.fNodeSmallRadius, loc.getY() - opts.fNodeSmallRadius, opts.fNodeSmallRadius * 2, opts.fNodeSmallRadius * 2);
@@ -61,8 +64,12 @@ class FNode {
         }
         //draw contour
         gcFNode.setStroke(opts.fNodeColor);
+        gcFNode.setFill(opts.fNodeColor);
         gcFNode.setLineWidth(opts.fNodeWidth);
-        gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
+        if (opts.fNodeFill)
+            gcFNode.fillOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
+        else
+            gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
 
     }
 }
@@ -109,7 +116,6 @@ class UnidFConnection extends FConnection {
     public UnidFConnection(GraphicsContext gcFConnection, Point2D from, Point2D to, FOptions opts) {
         //draw
         this.opts = opts;
-        //this.opts.fConColor = this.opts.fNodeColor;
         this.gcFConnection = gcFConnection;
         Point2D mid = new Point2D((from.getX() + to.getX()) / 2, (to.getY() + from.getY()) / 2);
         gcFConnection.beginPath();
@@ -263,10 +269,9 @@ class BidFConnection extends FConnection {
         gcFConnection.lineTo(xEnd2, yEnd2);
         gcFConnection.stroke();
         gcFConnection.closePath();
-        if (opts.fConHasArrow) {
-            drawArrow(arrowLoc, angleBase);
-            drawArrow(arrowLoc2, angleBase - Math.PI);
-        }
+        drawArrow(arrowLoc, angleBase);
+        drawArrow(arrowLoc2, angleBase - Math.PI);
+
     }
 
 }
@@ -306,8 +311,8 @@ class SelfFConnection extends FConnection {
         double yArrow = Math.sin(-angleOffset - angleApproach) * 10 + yBaseR;
         Point2D locArrow = new Point2D(xArrow, yArrow);
 
-        double xText = Math.cos(-angleOffset) * opts.fConTextHeight + xMidAnchor;
-        double yText = Math.sin(-angleOffset) * opts.fConTextHeight + yMidAnchor;
+        double xText = Math.cos(-angleOffset) * opts.fConSelfTextHeight + xMidAnchor;
+        double yText = Math.sin(-angleOffset) * opts.fConSelfTextHeight + yMidAnchor;
 
         gcFConnection.setFill(opts.fConColor);
         gcFConnection.setTextAlign(TextAlignment.CENTER);
@@ -418,8 +423,6 @@ class JprFConnection extends FConnection {
 }
 
 public class FNodeManager {
-    //defaults
-
     private int FNodeIDGiver = 0;
     private final Color clearScreenColor = Color.WHITE;
     private final GraphicsContext gc;
@@ -442,11 +445,11 @@ public class FNodeManager {
         encounteredFNodeOptions.put(e, o);
     }
 
-    public void populateWithFNodes(double xDefault,double yDefault) {
-        ArrayList<Integer> todel = new ArrayList<>();
+    public void populateWithFNodes(double xDefault, double yDefault) {
+        ArrayList<Integer> toDel = new ArrayList<>();
 
         for (String fName : encounteredFNodeNames) {
-            int id  = getFNodeIDByTxt(fName);
+            int id = getFNodeIDByTxt(fName);
             if (!FNodeMap.containsKey(id)) {
                 addFNode(xDefault, yDefault, fName, encounteredFNodeOptions.get(fName));
             } else {
@@ -456,11 +459,11 @@ public class FNodeManager {
 
         for (FNode fn : FNodeMap.values()) {
             if (!encounteredFNodeNames.contains(fn.fname)) {
-                todel.add(fn.ID);
+                toDel.add(fn.ID);
             }
         }
 
-        for (int i : todel)
+        for (int i : toDel)
             FNodeMap.remove(i);
         encounteredFNodeNames.clear();
     }
@@ -470,6 +473,7 @@ public class FNodeManager {
     }
 
     public void initInteractivity() {
+        //TODO: Remove hardcoded 'A' key
         sp.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.A) {
                 if (!sp.isPannable())
@@ -646,7 +650,6 @@ public class FNodeManager {
         //draw connections
         for (FConnection fc : FConnectionMap.values())
             fc.draw();
-
 
         //draw nodes
         for (FNode fn : FNodeMap.values())

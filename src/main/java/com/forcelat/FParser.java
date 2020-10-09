@@ -60,9 +60,9 @@ public class FParser {
                 }
 
             }
-        } catch (IndexOutOfBoundsException ignored) {
-        }
+        } catch (IndexOutOfBoundsException ignored) { }
 
+        //TODO: ability to not show the text -> fill node instead.
         //populate canvas with found nodes
         fnm.populateWithFNodes(90, 90);
         //clear prev frame conn data
@@ -73,37 +73,6 @@ public class FParser {
             for (String rawLine : rawLines) {
                 ArrayList<String> lineData = (ArrayList<String>) Arrays.stream(rawLine.split(" ")).collect(Collectors.toList());
 
-                //parse add command
-               /* if (lineData.get(0).equals("add")) {
-                    //check for args
-                    if (lineData.contains("-node") && lineData.contains("-pos")) {
-                        FOptions opts = new FOptions();
-
-                        int nodeIndex = lineData.indexOf("-node") + 1;
-                        int posIndex = lineData.indexOf("-pos") + 1;
-
-                        //fnode name
-                        String fName = lineData.get(nodeIndex);
-
-                        //fnode pos
-                        double xPos = -1, yPos = -1;
-                        try {
-                            String[] data = lineData.get(posIndex).split(",");
-                            if (data.length == 2) {
-                                xPos = Double.parseDouble(data[0]);
-                                yPos = Double.parseDouble(data[1]);
-                            }
-                        } catch (NumberFormatException e) {
-                            xPos = -1;
-                            yPos = -1;
-                        }
-
-                        //OPTIONS START HERE!!!!
-                        genericFNodeOptionsParser(lineData, opts);
-
-                        fnm.addFNode(xPos, yPos, fName, opts);
-                    }
-                }*/
                 //parse flow command
                 if (lineData.get(0).equals("flow")) {
                     //check for args
@@ -224,10 +193,11 @@ public class FParser {
 
                         //OPTIONS START HERE!!!
                         ArrayList<String> checkForTokens = new ArrayList<>();
-                        String[] strings = {"-arrow", "-color", "-tangle", "-tsize", "-tflip", "-theight", "-lwidth"};
+                        String[] strings = {"-color", "-tangle", "-tsize", "-theight", "-lwidth"};
 
                         checkForTokens.addAll(Arrays.asList(strings));
                         genericFConFOptionsParser(lineData, opts, checkForTokens);
+
 
                         if (texts.size() != 0)
                             fnm.bidFConnection(IDs.get(0), IDs.get(1), texts.get(0), texts.get(1), opts);
@@ -334,8 +304,6 @@ public class FParser {
         } catch (IndexOutOfBoundsException e) {
             //   System.out.println("ERROR: There's been an indexing error! Are there enough arguments?");
         }
-
-
         fnm.display();
     }
 
@@ -394,7 +362,23 @@ public class FParser {
         } catch (Exception e) {
 
         }
+        //fnode show text
+        boolean fNodeShowText = opts.fNodeShowText;
+        try {
+            if (lineData.contains("-notext"))
+                fNodeShowText = false;
+        } catch (Exception e) {
+        }
 
+        //fnode fill node
+        boolean fNodeFill = opts.fNodeFill;
+        try {
+            if (lineData.contains("-fill"))
+                fNodeFill = true;
+        } catch (Exception e) {
+        }
+        opts.fNodeFill = fNodeFill;
+        opts.fNodeShowText = fNodeShowText;
         opts.fNodeWidth = fNodeWidth;
         opts.fNodeRadius = fRadius;
         opts.fNodeColor = fColor;
@@ -531,6 +515,19 @@ public class FParser {
         } catch (Exception e) {
         }
 
+        //fConSelfTextHeight
+        double fConSelfTextHeight = opts.fConSelfTextHeight;
+        try {
+            if (scanForTokens.contains("-theight") && lineData.contains("-theight")) {
+                int textHeightIndex = lineData.indexOf("-theight") + 1;
+                try {
+                    fConSelfTextHeight = Double.parseDouble(lineData.get(textHeightIndex));
+                } catch (NumberFormatException e) {
+                }
+            }
+        } catch (Exception e) {
+        }
+
         //fConLineWidth
         double fConLineWidth = opts.fConLineWidth;
         try {
@@ -552,6 +549,7 @@ public class FParser {
         } catch (Exception e) {
         }
 
+        opts.fConSelfTextHeight = fConSelfTextHeight;
         opts.fConHasArrow = fConHasArrow;
         opts.fConSelfAngle = fConSelfAngle;
         opts.fConStartAngle = fConStartAngle;

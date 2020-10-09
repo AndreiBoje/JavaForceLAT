@@ -10,13 +10,15 @@ public class FOptions {
     public Color fNodeColor = Color.BLACK;
     public double fNodeTextSize = 30;
     public double fNodeWidth = 3;
-    public boolean fNodeStatic = false;
+    public boolean fNodeShowText = true;
+    public boolean fNodeFill = false;
     //FConnections
     public Color fConColor = Color.BLACK;
     public double fConTextAngle = 0;
     public double fConTextSize = 20;
     public boolean fConFlipText = false;
     public double fConTextHeight = 20;
+    public double fConSelfTextHeight = 0;
     public double fConLineWidth = 3;
     public double fConRiseAngle = 45; //degrees
     public double fConExtendFactor = 100;
