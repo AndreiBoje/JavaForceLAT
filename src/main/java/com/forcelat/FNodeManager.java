@@ -505,7 +505,26 @@ public class FNodeManager {
 
                 FNode fn = FNodeMap.get(selectedFNodeID);
 
-                fn.loc = cursorLoc;
+               // fn.loc = cursorLoc;
+
+                /**
+                 *   xPOS  68
+                 *   c (step size) 5
+                 *   find smallest multiple of c greater than xPOS
+                 *
+                 */
+                int i=(int)cursorLoc.getX();
+                int j=(int)cursorLoc.getY();
+                int step=20;
+
+                while(i%step!=0){
+                    i++;
+                }
+                while(j%step!=0){
+                    j++;
+                }
+                Point2D snap = new Point2D(i, j);
+                fn.loc = snap;
 
                 for (int ID : fn.unidConnectionTo) {
                     Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);

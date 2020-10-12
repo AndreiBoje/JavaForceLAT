@@ -11,6 +11,9 @@ public class FParser {
 
     private final TextArea ta;
     private final FNodeManager fnm;
+    //private final FSerializer fser;
+    //fser.load("file.flt");
+    //fser.save("where to save");
 
     public FParser(TextArea ta, FNodeManager fnm) {
         this.ta = ta;
@@ -26,6 +29,7 @@ public class FParser {
 
         ArrayList<String> rawLines = (ArrayList<String>) Arrays.stream(ta.getText().split("\n")).collect(Collectors.toList());
 
+        //Parse node placement & options
         try {
             for (String rawLine : rawLines) {
                 ArrayList<String> lineData = (ArrayList<String>) Arrays.stream(rawLine.split(" ")).collect(Collectors.toList());
@@ -62,13 +66,12 @@ public class FParser {
             }
         } catch (IndexOutOfBoundsException ignored) { }
 
-        //TODO: ability to not show the text -> fill node instead.
         //populate canvas with found nodes
         fnm.populateWithFNodes(90, 90);
         //clear prev frame conn data
         fnm.clear();
 
-        //Connections command handler
+        //Connection commands handler
         try {
             for (String rawLine : rawLines) {
                 ArrayList<String> lineData = (ArrayList<String>) Arrays.stream(rawLine.split(" ")).collect(Collectors.toList());
@@ -301,9 +304,7 @@ public class FParser {
                     }
                 }
             }
-        } catch (IndexOutOfBoundsException e) {
-            //   System.out.println("ERROR: There's been an indexing error! Are there enough arguments?");
-        }
+        } catch (IndexOutOfBoundsException ignored) { }
         fnm.display();
     }
 

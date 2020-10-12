@@ -16,12 +16,14 @@ dependencies {
 }
 
 javafx {
-    version='12'
+    version='14'
     modules = [ 'javafx.controls', 'javafx.fxml','javafx.swing' ]
 }
 
 application{
+    //mainClassName = 'com.tests.Main'
     mainClassName = 'com.forcelat.Main'
+
 }
 run{
     standardInput = System.in
