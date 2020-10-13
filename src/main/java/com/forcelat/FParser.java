@@ -22,7 +22,9 @@ public class FParser {
 
     public void beginFParse() {
         fnm.initInteractivity();
-        ta.setOnKeyTyped(e -> loopFParse());
+       // ta.setOnKeyTyped(e -> loopFParse());
+        ta.textProperty().addListener(e->loopFParse());
+        //loopFParse();
     }
 
     private void loopFParse() throws IndexOutOfBoundsException {
@@ -34,6 +36,14 @@ public class FParser {
             for (String rawLine : rawLines) {
                 ArrayList<String> lineData = (ArrayList<String>) Arrays.stream(rawLine.split(" ")).collect(Collectors.toList());
 
+                if (lineData.get(0).equals("dragstep")) {
+                    try {
+                        int dragStep = Integer.parseInt(lineData.get(1));
+                        fnm.setDragStep(dragStep);
+                    } catch (NumberFormatException e) {
+                        fnm.setDragStep(20);
+                    }
+                }
                 //parse put command
                 if (lineData.get(0).equals("put")) {
                     //check for args
@@ -64,10 +74,11 @@ public class FParser {
                 }
 
             }
-        } catch (IndexOutOfBoundsException ignored) { }
+        } catch (IndexOutOfBoundsException ignored) {
+        }
 
         //populate canvas with found nodes
-        fnm.populateWithFNodes(90, 90);
+        fnm.populateWithFNodes();
         //clear prev frame conn data
         fnm.clear();
 
@@ -304,7 +315,8 @@ public class FParser {
                     }
                 }
             }
-        } catch (IndexOutOfBoundsException ignored) { }
+        } catch (IndexOutOfBoundsException ignored) {
+        }
         fnm.display();
     }
 

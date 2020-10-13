@@ -2,8 +2,10 @@ package com.forcelat;
 
 import javafx.scene.paint.Color;
 
+import java.io.Serializable;
+
 //Options and defaults for FNodes //No required params are here
-public class FOptions {
+public class FOptions implements Serializable {
     //FNodes
     public double fNodeRadius = 30;
     public double fNodeSmallRadius = 0.8 * fNodeRadius;
@@ -12,6 +14,8 @@ public class FOptions {
     public double fNodeWidth = 3;
     public boolean fNodeShowText = true;
     public boolean fNodeFill = false;
+    public double fNodeX=90;
+    public double fNodeY=90;
     //FConnections
     public Color fConColor = Color.BLACK;
     public double fConTextAngle = 0;

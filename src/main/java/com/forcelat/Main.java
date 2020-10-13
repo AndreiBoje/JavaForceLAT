@@ -10,7 +10,10 @@ import javafx.scene.layout.*;
 import javafx.application.Application;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 
 public class Main extends Application {
@@ -25,19 +28,6 @@ public class Main extends Application {
         double width = 1280;
         double height = 720;
 
-       /* TextArea ta = new TextArea();
-        ta.setMinWidth(300);
-        Canvas canvas = new Canvas(1500, 1000);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
-        ScrollPane sp = new ScrollPane(canvas);
-
-        FNodeManager fnm = new FNodeManager(gc,sp);
-        FParser fp = new FParser(ta, fnm);
-        fp.beginFParse();
-
-        HBox vb = new HBox(sp, ta);
-        Scene scene = new Scene(vb, width, height);*/
         TextArea mainTA = new TextArea();
         Canvas mainCanvas = new Canvas(1000, 1000);
         ScrollPane mainSP = new ScrollPane(mainCanvas);
@@ -47,24 +37,53 @@ public class Main extends Application {
                 BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 10, 0, 0))));
 
         mainTA.setMinWidth(300);
-        HBox.setHgrow(mainTA,Priority.ALWAYS);
+        HBox.setHgrow(mainTA, Priority.ALWAYS);
+        HBox.setHgrow(mainSP, Priority.ALWAYS);
+
         mainSP.setMinWidth(300);
         addResizeListeners(scrollHB, 10);
 
         Menu file = new Menu("File");
-        MenuItem newFile = new MenuItem("New..");
-        MenuItem loadFile = new MenuItem("Load..");
         MenuItem save = new MenuItem("Save");
-        MenuItem saveAs = new MenuItem("Save as..");
+        MenuItem load = new MenuItem("Load");
+        file.getItems().addAll(save, load);
+        Menu ctx = new Menu("Context");
+        MenuItem clear = new MenuItem("Clear");
+        MenuItem imgSize = new MenuItem("Image size..");
         MenuItem exportImg = new MenuItem("Export image..");
-        file.getItems().addAll(newFile, loadFile, save, saveAs, exportImg);
-        MenuBar menuBar = new MenuBar(file);
+        ctx.getItems().addAll(clear, imgSize, exportImg);
+        MenuBar menuBar = new MenuBar(file, ctx);
         VBox mainVB = new VBox(menuBar, mainHB);
 
-        FNodeManager fnm = new FNodeManager(mainCanvas.getGraphicsContext2D(),mainSP);
-        FParser fp = new FParser(mainTA,fnm);
+        FNodeManager fnm = new FNodeManager(mainCanvas.getGraphicsContext2D(), mainSP);
+        FParser fp = new FParser(mainTA, fnm);
         fnm.initInteractivity();
         fp.beginFParse();
+
+
+        save.setOnAction(e -> {
+            final FileChooser fc = new FileChooser();
+            fc.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("FLAT", "*.flat"));
+            File saveFile = fc.showSaveDialog(window);
+            if(saveFile==null)
+                return;
+
+            FSerializer fser = new FSerializer();
+            fser.serialize(mainTA.getText(), fnm,saveFile);
+        });
+
+        load.setOnAction(e -> {
+            //TODO: Open window and choose where to load from
+            final FileChooser fc = new FileChooser();
+            fc.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("FLAT", "*.flat"));
+            File loadFile = fc.showOpenDialog(window);
+            if(loadFile==null)
+                return;
+            FSerializer fser = new FSerializer();
+            fser.deserialize(mainTA, fnm,loadFile);
+            fnm.display();
+        });
+
         Scene scene = new Scene(mainVB, width, height);
 
         window.setScene(scene);

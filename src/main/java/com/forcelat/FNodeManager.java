@@ -5,7 +5,6 @@ import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
@@ -33,7 +32,7 @@ class FNode {
 
     public FNode(GraphicsContext gcFNode, Point2D location, int ID, String fname, FOptions opts) {
         this.gcFNode = gcFNode;
-        this.loc = location;
+        this.loc = new Point2D(opts.fNodeX, opts.fNodeY);
         this.ID = ID;
         this.fname = fname;
         this.opts = opts;
@@ -423,21 +422,27 @@ class JprFConnection extends FConnection {
 }
 
 public class FNodeManager {
-    private int FNodeIDGiver = 0;
-    private final Color clearScreenColor = Color.WHITE;
-    private final GraphicsContext gc;
-    private final ScrollPane sp;
-    private final TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
-    private final HashSet<String> encounteredFNodeNames = new HashSet<>();
-    public HashMap<String, FOptions> encounteredFNodeOptions = new HashMap<>();
-    private final HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
-    private int selectedFNodeID = -1;
+    int FNodeIDGiver = 0;
+    Color clearScreenColor = Color.WHITE;
+    GraphicsContext gc;
+    ScrollPane sp;
+    TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
+    HashSet<String> encounteredFNodeNames = new HashSet<>();
+    HashMap<String, FOptions> encounteredFNodeOptions = new HashMap<>();
+    HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
+    int selectedFNodeID = -1;
+    int dragStep = 20;
 
     public FNodeManager(GraphicsContext gc, ScrollPane sp) {
         this.gc = gc;
         this.sp = sp;
         //just for screen clear
         display();
+
+    }
+
+    public void setDragStep(int dragStep) {
+        this.dragStep = dragStep;
     }
 
     public void putFNode(String e, FOptions o) {
@@ -445,13 +450,13 @@ public class FNodeManager {
         encounteredFNodeOptions.put(e, o);
     }
 
-    public void populateWithFNodes(double xDefault, double yDefault) {
+    public void populateWithFNodes() {
         ArrayList<Integer> toDel = new ArrayList<>();
 
         for (String fName : encounteredFNodeNames) {
             int id = getFNodeIDByTxt(fName);
             if (!FNodeMap.containsKey(id)) {
-                addFNode(xDefault, yDefault, fName, encounteredFNodeOptions.get(fName));
+                addFNode(0, 0, fName, encounteredFNodeOptions.get(fName));
             } else {
                 FNodeMap.get(id).opts = encounteredFNodeOptions.get(fName);
             }
@@ -473,17 +478,23 @@ public class FNodeManager {
     }
 
     public void initInteractivity() {
-        //TODO: Remove hardcoded 'A' key
+
         sp.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.A) {
-                if (!sp.isPannable())
-                    sp.setPannable(true);
-                else
-                    sp.setPannable(false);
-            }
+            if (e.isShiftDown())
+                sp.setPannable(true);
+        });
+        sp.setOnKeyReleased(e -> {
+            sp.setPannable(false);
         });
 
+
         Canvas canvas = gc.getCanvas();
+
+        sp.setOnKeyPressed(e -> {
+            if (e.isControlDown()) {
+
+            }
+        });
 
         canvas.setOnMouseDragged(e -> {
             if (sp.isPannable()) return;
@@ -505,26 +516,15 @@ public class FNodeManager {
 
                 FNode fn = FNodeMap.get(selectedFNodeID);
 
-               // fn.loc = cursorLoc;
+                int i = (int) cursorLoc.getX();
+                int j = (int) cursorLoc.getY();
 
-                /**
-                 *   xPOS  68
-                 *   c (step size) 5
-                 *   find smallest multiple of c greater than xPOS
-                 *
-                 */
-                int i=(int)cursorLoc.getX();
-                int j=(int)cursorLoc.getY();
-                int step=20;
-
-                while(i%step!=0){
+                while (i % dragStep != 0)
                     i++;
-                }
-                while(j%step!=0){
+                while (j % dragStep != 0)
                     j++;
-                }
-                Point2D snap = new Point2D(i, j);
-                fn.loc = snap;
+                fn.loc = new Point2D(i, j);
+
 
                 for (int ID : fn.unidConnectionTo) {
                     Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
