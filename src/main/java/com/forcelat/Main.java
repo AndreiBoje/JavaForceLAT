@@ -1,9 +1,10 @@
 package com.forcelat;
 
-import javafx.geometry.Bounds;
+import com.forcelat.drawingLogic.FNodeManager;
+import com.forcelat.parsingLogic.FParser;
+import com.forcelat.serializeLogic.FSerializer;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -12,7 +13,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
 
 
