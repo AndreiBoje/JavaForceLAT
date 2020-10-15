@@ -17,7 +17,7 @@ import java.util.TreeMap;
 public class FNodeManager {
     public int FNodeIDGiver = 0;
     Color clearScreenColor = Color.WHITE;
-    GraphicsContext gc;
+    public GraphicsContext gc;
     ScrollPane sp;
     public TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
     HashSet<String> encounteredFNodeNames = new HashSet<>();
@@ -71,10 +71,10 @@ public class FNodeManager {
     }
 
     public void initInteractivity() {
-
         sp.setOnKeyPressed(e -> {
-            if (e.isShiftDown())
+            if (e.isShiftDown()) {
                 sp.setPannable(true);
+            }
         });
         sp.setOnKeyReleased(e -> {
             sp.setPannable(false);
@@ -83,11 +83,6 @@ public class FNodeManager {
 
         Canvas canvas = gc.getCanvas();
 
-        sp.setOnKeyPressed(e -> {
-            if (e.isControlDown()) {
-
-            }
-        });
 
         canvas.setOnMouseDragged(e -> {
             if (sp.isPannable()) return;

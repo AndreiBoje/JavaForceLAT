@@ -1,34 +1,27 @@
 package com.forcelat.serializeLogic;
 
+import com.forcelat.drawingLogic.FNode;
 import com.forcelat.drawingLogic.FNodeManager;
 import javafx.geometry.Point2D;
 import javafx.scene.control.TextArea;
-import java.io.*;
-import java.util.TreeMap;
 
-//JavaFX Point2D is not serializable so..
-class FPoint2D implements Serializable {
-    double x, y;
-    public FPoint2D(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-//"Store" class
-class FSerObject implements Serializable {
-    String textData;
-    int IDGiver;
-    TreeMap<Integer, FPoint2D> FNodeMapLoc = new TreeMap<>();
-}
+import java.io.*;
+
+//TODO: SERIALIZE CANVAS SIZE ALSO
 
 public class FSerializer {
 
-    public void serialize(String textData, FNodeManager fnm, File saveDest) {
+    public static void serialize(String textData, FNodeManager fnm, File saveDest) {
         FSerObject fobj = new FSerObject();
         fobj.textData = textData;
         fobj.IDGiver = 0;
-        for (int ID : fnm.FNodeMap.keySet())
-            fobj.FNodeMapLoc.put(ID, new FPoint2D(fnm.FNodeMap.get(ID).loc.getX(), fnm.FNodeMap.get(ID).loc.getY()));
+        int i=0;
+        for(FNode fn : fnm.FNodeMap.values()){
+            fobj.FNodeMapLoc.put(i,new FPoint2D(fn.loc.getX(),fn.loc.getY()));
+            i++;
+        }
+        fobj.canvasH = (int)fnm.gc.getCanvas().getHeight();
+        fobj.canvasW = (int)fnm.gc.getCanvas().getWidth();
 
         try {
             FileOutputStream fos = new FileOutputStream(saveDest);
@@ -41,7 +34,7 @@ public class FSerializer {
         }
     }
 
-    public void deserialize(TextArea ta, FNodeManager fnm,File openFile) {
+    public static void deserialize(TextArea ta, FNodeManager fnm ,File openFile) {
 
         try {
             FileInputStream fis = new FileInputStream(openFile);
@@ -52,6 +45,8 @@ public class FSerializer {
             fnm.FNodeMap.clear();
             fnm.FNodeIDGiver = fobj.IDGiver;
             ta.setText(fobj.textData);
+            fnm.gc.getCanvas().setHeight(fobj.canvasH);
+            fnm.gc.getCanvas().setWidth(fobj.canvasW);
 
             for (int ID : fobj.FNodeMapLoc.keySet())
                 fnm.FNodeMap.get(ID).loc = new Point2D(fobj.FNodeMapLoc.get(ID).x, fobj.FNodeMapLoc.get(ID).y);
@@ -59,5 +54,11 @@ public class FSerializer {
         } catch (IOException | ClassNotFoundException ignored) {
             ignored.printStackTrace();
         }
+    }
+    public static void saveImage(){
+        //TODO:
+    }
+    public static void saveImageAs(){
+        //TODO:
     }
 }

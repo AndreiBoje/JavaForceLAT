@@ -24,7 +24,7 @@ public class FNode {
 
     public FNode(GraphicsContext gcFNode, Point2D location, int ID, String fname, FOptions opts) {
         this.gcFNode = gcFNode;
-        this.loc = location;
+        this.loc = new Point2D(90,90); //CHANGE THIS HARDCODED THING LATER
         this.ID = ID;
         this.fname = fname;
         this.opts = opts;
