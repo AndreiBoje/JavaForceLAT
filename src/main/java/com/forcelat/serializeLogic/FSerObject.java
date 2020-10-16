@@ -8,5 +8,5 @@ public class FSerObject implements Serializable {
     String textData;
     int IDGiver;
     TreeMap<Integer, FPoint2D> FNodeMapLoc = new TreeMap<>();
-    int canvasW,canvasH;
+    Integer canvasW,canvasH;
 }

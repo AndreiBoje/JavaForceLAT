@@ -19,8 +19,10 @@ import javafx.stage.StageStyle;
 public class imageSizeUI {
 
     public static Integer width, height, minW = 300, minH = 300;
+    public static TextField heightTextField = new TextField();
+    public static TextField widthTextField = new TextField();
 
-    static boolean err = false;
+    boolean err = false;
 
     public static void display() {
         Stage window = new Stage();
@@ -28,15 +30,14 @@ public class imageSizeUI {
         Button exitButton = new Button("Cancel");
         Label widthLabel = new Label("Width");
         Label heightLabel = new Label("Height");
-        TextField heightTextField = new TextField(width.toString());
-        TextField widthTextField = new TextField(height.toString());
+        widthTextField = new TextField(width.toString());
+        heightTextField = new TextField(height.toString());
         okButton.setFont(new Font("Calibri", 16));
         exitButton.setFont(new Font("Calibri", 16));
         heightLabel.setFont(new Font("Calibri", 16));
         widthLabel.setFont(new Font("Calibri", 16));
         heightTextField.setFont(new Font("Calibri", 16));
         widthTextField.setFont(new Font("Calibri", 16));
-
 
         GridPane grid = new GridPane();
         grid.add(widthLabel, 0, 0);
@@ -60,7 +61,7 @@ public class imageSizeUI {
                     height = Integer.parseInt(heightTextField.getText());
                     width = Integer.parseInt(widthTextField.getText());
                     window.close();
-                }else{
+                } else {
                     Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                     errorAlert.setHeaderText("Width or Height lower than minimum allowed (300px) !");
                     errorAlert.showAndWait();
