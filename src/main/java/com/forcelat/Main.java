@@ -35,6 +35,7 @@ public class Main extends Application {
 
         //MAIN UI INIT
         TextArea mainTA = new TextArea();
+        TextArea msgTA = new TextArea();
         Canvas mainCanvas = new Canvas(canvasW, canvasH);
         ScrollPane mainSP = new ScrollPane(mainCanvas);
         HBox scrollHB = new HBox(mainSP);
@@ -71,12 +72,17 @@ public class Main extends Application {
         fp.beginFParse();
 
         //MENU LISTENERS
+        clear.setOnAction(e -> {
+            mainTA.clear();
+            fnm.FNodeMap.clear();
+        });
+
         selRootFolder.setOnAction(e -> {
             DirectoryChooser dc = new DirectoryChooser();
             dc.setInitialDirectory(new File(projectPathFile.getAbsolutePath()));
             File selectedDirectory = dc.showDialog(window);
             if (selectedDirectory != null)
-                projectPathFile=selectedDirectory;
+                projectPathFile = selectedDirectory;
 
         });
 
@@ -89,22 +95,28 @@ public class Main extends Application {
             fnm.display();
         });
         save.setOnAction(e -> {
-            FSerializer.serialize(mainTA.getText(), fnm, projectPathFile);
+            FSerializer.serialize(mainTA, fnm, projectPathFile);
         });
         saveAs.setOnAction(e -> {
-            if (FSerializer.serialize(mainTA.getText(), fnm, projectPathFile))
+            String name = FSerializer.serializeAs(mainTA, fnm, projectPathFile);
+            if (name != null) {
                 save.setDisable(false);
+                window.setTitle("ForceLAT - " + name);
+            }
         });
         load.setOnAction(e -> {
-            if (FSerializer.deserialize(mainTA, fnm, projectPathFile))
+            String name = FSerializer.deserialize(mainTA, fnm, projectPathFile);
+            if (name != null) {
                 save.setDisable(false);
+                window.setTitle("ForceLAT - " + name);
+            }
         });
         exportImg.setOnAction(e -> FSerializer.exportImage(fnm, projectPathFile));
 
         //INIT WINDOW AND SCENE
         Scene scene = new Scene(mainVB, width, height);
         window.setScene(scene);
-        window.setTitle("ForceLat");
+        window.setTitle("ForceLat - untitled");
         window.show();
     }
 

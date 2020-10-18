@@ -18,11 +18,12 @@ import javafx.stage.StageStyle;
 
 public class imageSizeUI {
 
-    public static Integer width, height, minW = 300, minH = 300;
+    public static Integer width, height;
     public static TextField heightTextField = new TextField();
     public static TextField widthTextField = new TextField();
 
     boolean err = false;
+    static final int W_LIMIT = 4096,H_LIMIT = 4096,MIN_W_LIMIT=300,MIN_H_LIMIT=300;
 
     public static void display() {
         Stage window = new Stage();
@@ -57,13 +58,15 @@ public class imageSizeUI {
 
         okButton.setOnMouseClicked(e -> {
             try {
-                if (Integer.parseInt(heightTextField.getText()) >= minH && Integer.parseInt(widthTextField.getText()) >= minW) {
+                int H = Integer.parseInt(heightTextField.getText());
+                int W = Integer.parseInt(widthTextField.getText());
+                if ( H >= MIN_H_LIMIT &&  W >= MIN_W_LIMIT && H <= H_LIMIT && W <= W_LIMIT) {
                     height = Integer.parseInt(heightTextField.getText());
                     width = Integer.parseInt(widthTextField.getText());
                     window.close();
                 } else {
                     Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                    errorAlert.setHeaderText("Width or Height lower than minimum allowed (300px) !");
+                    errorAlert.setHeaderText("Width or Height doesn't satisfy min/max bounds !");
                     errorAlert.showAndWait();
                 }
             } catch (NumberFormatException ex) {

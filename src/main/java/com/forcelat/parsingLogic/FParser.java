@@ -1,8 +1,11 @@
 package com.forcelat.parsingLogic;
 
+import com.forcelat.drawingLogic.FNode;
 import com.forcelat.drawingLogic.FNodeManager;
+import javafx.geometry.Point2D;
 import javafx.scene.control.TextArea;
 import javafx.scene.paint.Color;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -19,7 +22,7 @@ public class FParser {
 
     public void beginFParse() {
         fnm.initInteractivity();
-        ta.textProperty().addListener(e->loopFParse());
+        ta.textProperty().addListener(e -> loopFParse());
     }
 
     private void loopFParse() throws IndexOutOfBoundsException {
@@ -39,14 +42,15 @@ public class FParser {
                         fnm.setDragStep(20);
                     }
                 }
-                //parse put command
-                if (lineData.get(0).equals("put")) {
+
+                //parse opts command
+                if (lineData.get(0).equals("opts")) {
                     //check for args
                     if (lineData.contains("-nodes")) {
                         FOptions opts = new FOptions();
 
                         int nodesIndex = lineData.indexOf("-nodes") + 1;
-                        int posIndex = lineData.indexOf("-pos") + 1;
+                        int aliasIndex = lineData.indexOf("-alias") + 1;
 
                         //fnodes name
 
@@ -61,10 +65,63 @@ public class FParser {
                         }
 
                         //OPTIONS START HERE!!!!
-                        genericFNodeOptionsParser(lineData, opts);
+                        genericFNodeOptionsParser(lineData, opts); //add alias also to opts
+                        //CAN DO ONLY HERE OPTION
 
-                        for (int i = 0; i < argsNo; i++)
-                            fnm.putFNode(IDs.get(i), opts);
+                        ArrayList<String> aliases = new ArrayList<>();
+                        try {
+                            String[] names = lineData.get(aliasIndex).split(",");
+                            // System.out.println(Arrays.toString(names));
+                            argsNo = names.length;
+                            for (int i = 0; i < argsNo; i++)
+                                aliases.add(i, names[i]);
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+
+                        try {
+                            for (Integer i = 0; i <= argsNo; i++) {
+                                FNode fn = fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i)));
+                                if (fn != null) {
+                                    fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).opts = opts;
+                                }
+                            }
+                        } catch (NullPointerException e) {
+                        }
+                    }
+                }
+                if (lineData.get(0).equals("alias")) {
+                    //check for args
+                    if (lineData.contains("-nodes")) {
+
+                        int nodesIndex = lineData.indexOf("-nodes") + 1;
+                        int aliasIndex = lineData.indexOf("-text") + 1;
+
+                        //fnodes name
+                        int argsNo = -1;
+                        ArrayList<String> IDs = new ArrayList<>();
+                        try {
+                            String[] names = lineData.get(nodesIndex).split(",");
+                            argsNo = names.length;
+                            for (int i = 0; i < argsNo; i++)
+                                IDs.add(names[i]);
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+                        ArrayList<String> aliases = new ArrayList<>();
+                        try {
+                            if (aliasIndex != 0) {
+                                String[] names = lineData.get(aliasIndex).split(",");
+                                argsNo = names.length;
+                                for (int i = 0; i < argsNo; i++)
+                                    aliases.add(names[i]);
+                            }
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+
+                        for (int i = 0; i < argsNo; i++) {
+                            if (fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))) != null) {
+                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).alias = aliases.get(i);
+                            }
+                        }
                     }
                 }
 
@@ -73,7 +130,7 @@ public class FParser {
         }
 
         //populate canvas with found nodes
-        fnm.populateWithFNodes();
+        //fnm.populateWithFNodes();
         //clear prev frame conn data
         fnm.clear();
 
@@ -328,7 +385,6 @@ public class FParser {
                 }
             }
         } catch (Exception ignored) {
-
         }
         //fnode color
         Color fColor = opts.fNodeColor;
@@ -385,6 +441,7 @@ public class FParser {
                 fNodeFill = true;
         } catch (Exception e) {
         }
+
         opts.fNodeFill = fNodeFill;
         opts.fNodeShowText = fNodeShowText;
         opts.fNodeWidth = fNodeWidth;

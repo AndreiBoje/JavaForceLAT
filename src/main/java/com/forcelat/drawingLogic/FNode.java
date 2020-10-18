@@ -13,8 +13,8 @@ public class FNode {
     GraphicsContext gcFNode;
     public Point2D loc;
     Integer ID;
-    String fname;
-    FOptions opts;
+    public String fname,alias;
+    public FOptions opts;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
@@ -24,7 +24,7 @@ public class FNode {
 
     public FNode(GraphicsContext gcFNode, Point2D location, int ID, String fname, FOptions opts) {
         this.gcFNode = gcFNode;
-        this.loc = new Point2D(90,90); //CHANGE THIS HARDCODED THING LATER
+        this.loc = location; //CHANGE THIS HARDCODED THING LATER
         this.ID = ID;
         this.fname = fname;
         this.opts = opts;
@@ -36,7 +36,7 @@ public class FNode {
             gcFNode.setFont(new Font("Calibri", opts.fNodeTextSize));
             gcFNode.setTextAlign(TextAlignment.CENTER);
             gcFNode.setTextBaseline(VPos.CENTER);
-            gcFNode.fillText(fname, loc.getX(), loc.getY());
+            gcFNode.fillText(alias != null ? alias : fname, loc.getX(), loc.getY());
         }
 
         if (isFinal) {

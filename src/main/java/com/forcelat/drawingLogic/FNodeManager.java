@@ -5,6 +5,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
 
@@ -15,7 +16,7 @@ import java.util.TreeMap;
 
 
 public class FNodeManager {
-    public int FNodeIDGiver = 0;
+    public Integer FNodeIDGiver = 0;
     Color clearScreenColor = Color.WHITE;
     public GraphicsContext gc;
     ScrollPane sp;
@@ -24,6 +25,7 @@ public class FNodeManager {
     HashMap<String, FOptions> encounteredFNodeOptions = new HashMap<>();
     HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
     int selectedFNodeID = -1;
+    boolean doubleClicked = false;
     int dragStep = 20;
 
     public FNodeManager(GraphicsContext gc, ScrollPane sp) {
@@ -68,9 +70,11 @@ public class FNodeManager {
 
     public void clear() {
         FConnectionMap.clear();
+        display();
     }
 
     public void initInteractivity() {
+        //SHIFT + DRAG = MOVE VIEW AREA
         sp.setOnKeyPressed(e -> {
             if (e.isShiftDown()) {
                 sp.setPannable(true);
@@ -83,58 +87,92 @@ public class FNodeManager {
 
         Canvas canvas = gc.getCanvas();
 
+        canvas.setOnMousePressed(e -> {
+            //CTRL+ LMB = PLACE NODE THERE
+            if (e.getButton() == MouseButton.PRIMARY && !e.isShiftDown() && e.isControlDown()) {
+                FOptions opts = new FOptions();
+                int i = (int) e.getX();
+                int j = (int) e.getY();
 
+                while (i % dragStep != 0)
+                    i++;
+                while (j % dragStep != 0)
+                    j++;
+                addFNode(i, j, FNodeIDGiver.toString(), opts);
+                display();
+            }
+            //CTRL+ RMB = DELETE NODE THERE
+            else if (e.getButton() == MouseButton.SECONDARY && !e.isShiftDown() && e.isControlDown()) {
+
+                double searchRadius = 30;
+                Point2D cursorLoc = new Point2D(e.getX(), e.getY());
+
+                for (FNode fn : FNodeMap.values()) {
+                    double dist = cursorLoc.distance(fn.loc);
+                    if (dist <= searchRadius) {
+                        FNodeMap.remove(fn.ID);
+                        display();
+                        break;
+                    }
+                }
+            }
+        });
+
+        //LMB = MOVE SELECTED NODE
         canvas.setOnMouseDragged(e -> {
             if (sp.isPannable()) return;
             //get nearest node ID in range HARDCODED: 30 (radius default)
             double searchRadius = 30;
             Point2D cursorLoc = new Point2D(e.getX(), e.getY());
 
-            if (selectedFNodeID == -1) {
-                for (FNode fn : FNodeMap.values()) {
-                    double dist = cursorLoc.distance(fn.loc);
-                    if (dist <= searchRadius) {
-                        selectedFNodeID = fn.ID;
-                        break;
+            if (!e.isControlDown()) {
+                if (selectedFNodeID == -1) {
+                    for (FNode fn : FNodeMap.values()) {
+                        double dist = cursorLoc.distance(fn.loc);
+                        if (dist <= searchRadius) {
+                            selectedFNodeID = fn.ID;
+                            break;
+                        }
                     }
                 }
+
+                if (selectedFNodeID != -1) {
+
+                    FNode fn = FNodeMap.get(selectedFNodeID);
+
+                    int i = (int) cursorLoc.getX();
+                    int j = (int) cursorLoc.getY();
+
+                    while (i % dragStep != 0)
+                        i++;
+                    while (j % dragStep != 0)
+                        j++;
+                    fn.loc = new Point2D(i, j);
+
+                    {
+                        for (int ID : fn.unidConnectionTo) {
+                            Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
+                            if (FConnectionMap.containsKey(pair))
+                                FConnectionMap.get(pair).updatePos(fn);
+                        }
+                        for (int ID : fn.bidConnectsWith) {
+                            Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
+                            if (FConnectionMap.containsKey(pair))
+                                FConnectionMap.get(pair).updatePos(fn);
+                        }
+                        for (int ID : fn.jprConnectionTo) {
+                            Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
+                            if (FConnectionMap.containsKey(pair))
+                                FConnectionMap.get(pair).updatePos(fn);
+                        }
+                        if (fn.selfConnects) {
+                            Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, selectedFNodeID);
+                            FConnectionMap.get(pair).updatePos(fn);
+                        }
+                    }
+                }
+                display();
             }
-
-            if (selectedFNodeID != -1) {
-
-                FNode fn = FNodeMap.get(selectedFNodeID);
-
-                int i = (int) cursorLoc.getX();
-                int j = (int) cursorLoc.getY();
-
-                while (i % dragStep != 0)
-                    i++;
-                while (j % dragStep != 0)
-                    j++;
-                fn.loc = new Point2D(i, j);
-
-
-                for (int ID : fn.unidConnectionTo) {
-                    Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
-                    if (FConnectionMap.containsKey(pair))
-                        FConnectionMap.get(pair).updatePos(fn);
-                }
-                for (int ID : fn.bidConnectsWith) {
-                    Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
-                    if (FConnectionMap.containsKey(pair))
-                        FConnectionMap.get(pair).updatePos(fn);
-                }
-                for (int ID : fn.jprConnectionTo) {
-                    Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, ID);
-                    if (FConnectionMap.containsKey(pair))
-                        FConnectionMap.get(pair).updatePos(fn);
-                }
-                if (fn.selfConnects) {
-                    Pair<Integer, Integer> pair = new Pair<>(selectedFNodeID, selectedFNodeID);
-                    FConnectionMap.get(pair).updatePos(fn);
-                }
-            }
-            display();
         });
         //reset selection
         canvas.setOnMouseReleased(e -> {
@@ -151,7 +189,10 @@ public class FNodeManager {
 
     public int getFNodeIDByTxt(String txt) {
         for (FNode fn : FNodeMap.values())
-            if (fn.fname.equals(txt))
+            if (fn.alias != null) {
+                if (fn.fname.equals(txt) || fn.alias.equals(txt))
+                    return fn.ID;
+            } else if (fn.fname.equals(txt))
                 return fn.ID;
         return -1;
     }
