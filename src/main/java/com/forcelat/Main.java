@@ -147,7 +147,6 @@ public class Main extends Application {
         window.show();
     }
 
-
     //UI HANDLER RESIZER
     public void addResizeListeners(HBox m, int handleSize) {
         m.addEventFilter(MouseEvent.MOUSE_MOVED, e -> {

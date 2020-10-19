@@ -93,7 +93,5 @@ class BidFConnection extends FConnection {
         gcFConnection.closePath();
         drawArrow(arrowLoc, angleBase);
         drawArrow(arrowLoc2, angleBase - Math.PI);
-
     }
-
 }
