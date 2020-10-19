@@ -1,6 +1,7 @@
 package com.forcelat.drawingLogic;
 
 import com.forcelat.parsingLogic.FOptions;
+import com.forcelat.uiLogic.FSaveSense;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -9,9 +10,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.TreeMap;
 
 
@@ -21,11 +20,8 @@ public class FNodeManager {
     public GraphicsContext gc;
     ScrollPane sp;
     public TreeMap<Integer, FNode> FNodeMap = new TreeMap<>();
-    HashSet<String> encounteredFNodeNames = new HashSet<>();
-    HashMap<String, FOptions> encounteredFNodeOptions = new HashMap<>();
     HashMap<Pair<Integer, Integer>, FConnection> FConnectionMap = new HashMap<>();
     int selectedFNodeID = -1;
-    boolean doubleClicked = false;
     int dragStep = 20;
 
     public FNodeManager(GraphicsContext gc, ScrollPane sp) {
@@ -38,34 +34,6 @@ public class FNodeManager {
 
     public void setDragStep(int dragStep) {
         this.dragStep = dragStep;
-    }
-
-    public void putFNode(String e, FOptions o) {
-        encounteredFNodeNames.add(e);
-        encounteredFNodeOptions.put(e, o);
-    }
-
-    public void populateWithFNodes() {
-        ArrayList<Integer> toDel = new ArrayList<>();
-
-        for (String fName : encounteredFNodeNames) {
-            int id = getFNodeIDByTxt(fName);
-            if (!FNodeMap.containsKey(id)) {
-                addFNode(0, 0, fName, encounteredFNodeOptions.get(fName));
-            } else {
-                FNodeMap.get(id).opts = encounteredFNodeOptions.get(fName);
-            }
-        }
-
-        for (FNode fn : FNodeMap.values()) {
-            if (!encounteredFNodeNames.contains(fn.fname)) {
-                toDel.add(fn.ID);
-            }
-        }
-
-        for (int i : toDel)
-            FNodeMap.remove(i);
-        encounteredFNodeNames.clear();
     }
 
     public void clear() {
@@ -100,6 +68,7 @@ public class FNodeManager {
                     j++;
                 addFNode(i, j, FNodeIDGiver.toString(), opts);
                 display();
+                FSaveSense.changed();
             }
             //CTRL+ RMB = DELETE NODE THERE
             else if (e.getButton() == MouseButton.SECONDARY && !e.isShiftDown() && e.isControlDown()) {
@@ -115,6 +84,7 @@ public class FNodeManager {
                         break;
                     }
                 }
+                FSaveSense.changed();
             }
         });
 
@@ -172,6 +142,7 @@ public class FNodeManager {
                     }
                 }
                 display();
+                FSaveSense.changed();
             }
         });
         //reset selection
@@ -264,26 +235,6 @@ public class FNodeManager {
         Pair<Integer, Integer> key = new Pair<>(ID, ID);
         FConnectionMap.put(key, fc);
 
-    }
-
-    public void displayGrid() {
-        double width = gc.getCanvas().getWidth();
-        double height = gc.getCanvas().getHeight();
-        double spacing = 100; //pixels
-
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(1);
-        gc.beginPath();
-
-        for (int x = 0; x < width; x += spacing) {
-            for (int y = 0; y < height; y += spacing) {
-                gc.moveTo(0, y);
-                gc.lineTo(width, y);
-                gc.moveTo(x, 0);
-                gc.lineTo(x, height);
-            }
-        }
-        gc.stroke();
     }
 
     public void display() {

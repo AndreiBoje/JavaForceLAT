@@ -2,6 +2,7 @@ package com.forcelat.parsingLogic;
 
 import com.forcelat.drawingLogic.FNode;
 import com.forcelat.drawingLogic.FNodeManager;
+import com.forcelat.uiLogic.FSaveSense;
 import javafx.geometry.Point2D;
 import javafx.scene.control.TextArea;
 import javafx.scene.paint.Color;
@@ -22,12 +23,19 @@ public class FParser {
 
     public void beginFParse() {
         fnm.initInteractivity();
-        ta.textProperty().addListener(e -> loopFParse());
+        ta.textProperty().addListener(e -> {
+            loopFParse();
+            FSaveSense.changed();
+        });
     }
 
     private void loopFParse() throws IndexOutOfBoundsException {
 
         ArrayList<String> rawLines = (ArrayList<String>) Arrays.stream(ta.getText().split("\n")).collect(Collectors.toList());
+
+        //reset options b4 parsing
+        for (FNode fn : fnm.FNodeMap.values())
+            fnm.FNodeMap.get(fn.ID).opts = new FOptions();
 
         //Parse node placement & options
         try {
@@ -50,7 +58,6 @@ public class FParser {
                         FOptions opts = new FOptions();
 
                         int nodesIndex = lineData.indexOf("-nodes") + 1;
-                        int aliasIndex = lineData.indexOf("-alias") + 1;
 
                         //fnodes name
 
@@ -68,22 +75,12 @@ public class FParser {
                         genericFNodeOptionsParser(lineData, opts); //add alias also to opts
                         //CAN DO ONLY HERE OPTION
 
-                        ArrayList<String> aliases = new ArrayList<>();
-                        try {
-                            String[] names = lineData.get(aliasIndex).split(",");
-                            // System.out.println(Arrays.toString(names));
-                            argsNo = names.length;
-                            for (int i = 0; i < argsNo; i++)
-                                aliases.add(i, names[i]);
-                        } catch (IndexOutOfBoundsException e) {
-                        }
 
                         try {
-                            for (Integer i = 0; i <= argsNo; i++) {
+                            for (int i = 0; i < argsNo; i++) {
                                 FNode fn = fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i)));
-                                if (fn != null) {
-                                    fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).opts = opts;
-                                }
+                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).opts = opts;
+
                             }
                         } catch (NullPointerException e) {
                         }

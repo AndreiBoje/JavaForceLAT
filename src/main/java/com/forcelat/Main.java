@@ -3,10 +3,12 @@ package com.forcelat;
 import com.forcelat.drawingLogic.FNodeManager;
 import com.forcelat.parsingLogic.FParser;
 import com.forcelat.serializeLogic.FSerializer;
+import com.forcelat.uiLogic.FSaveSense;
 import com.forcelat.uiLogic.imageSizeUI;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.application.Application;
@@ -35,7 +37,6 @@ public class Main extends Application {
 
         //MAIN UI INIT
         TextArea mainTA = new TextArea();
-        TextArea msgTA = new TextArea();
         Canvas mainCanvas = new Canvas(canvasW, canvasH);
         ScrollPane mainSP = new ScrollPane(mainCanvas);
         HBox scrollHB = new HBox(mainSP);
@@ -75,14 +76,18 @@ public class Main extends Application {
         clear.setOnAction(e -> {
             mainTA.clear();
             fnm.FNodeMap.clear();
+            fnm.display();
         });
 
         selRootFolder.setOnAction(e -> {
             DirectoryChooser dc = new DirectoryChooser();
             dc.setInitialDirectory(new File(projectPathFile.getAbsolutePath()));
             File selectedDirectory = dc.showDialog(window);
-            if (selectedDirectory != null)
+            if (selectedDirectory != null) {
                 projectPathFile = selectedDirectory;
+                FSerializer.setLastProjectPath(projectPathFile.toString());
+            }
+
 
         });
 
@@ -96,6 +101,7 @@ public class Main extends Application {
         });
         save.setOnAction(e -> {
             FSerializer.serialize(mainTA, fnm, projectPathFile);
+            window.setTitle("ForceLAT - " + FSerializer.saveFile.getName());
         });
         saveAs.setOnAction(e -> {
             String name = FSerializer.serializeAs(mainTA, fnm, projectPathFile);
@@ -113,12 +119,34 @@ public class Main extends Application {
         });
         exportImg.setOnAction(e -> FSerializer.exportImage(fnm, projectPathFile));
 
+        //SET PROJECT FOLDER TO BE THE LAST IT WAS USED
+        projectPathFile = FSerializer.getLastProjectPath();
+
+        //CHANGED SENSE
+        FSaveSense.window=window;
         //INIT WINDOW AND SCENE
         Scene scene = new Scene(mainVB, width, height);
+
+        scene.setOnKeyPressed(e -> {
+            if (e.isControlDown() && e.getCode() == KeyCode.S) {
+                if (save.isDisable()) {
+                    String name = FSerializer.serializeAs(mainTA, fnm, projectPathFile);
+                    if (name != null) {
+                        save.setDisable(false);
+                        window.setTitle("ForceLAT - " + name);
+                    }
+                } else {
+                    FSerializer.serialize(mainTA, fnm, projectPathFile);
+                    window.setTitle("ForceLAT - " + FSerializer.saveFile.getName());
+                }
+            }
+        });
+
         window.setScene(scene);
         window.setTitle("ForceLat - untitled");
         window.show();
     }
+
 
     //UI HANDLER RESIZER
     public void addResizeListeners(HBox m, int handleSize) {

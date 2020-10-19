@@ -16,7 +16,28 @@ import java.io.*;
 
 public class FSerializer {
 
-    static File saveFile = null;
+    public static File saveFile = null;
+
+    public static void setLastProjectPath(String projPath) {
+        try {
+            File file = new File("config.txt");
+            if (file.createNewFile()) {
+                FileWriter fw = new FileWriter(file);
+                fw.write(projPath);
+                fw.close();
+            }
+        } catch (IOException e) {
+        }
+    }
+    public static File getLastProjectPath(){
+        try{
+            File file = new File("config.txt");
+            BufferedReader fr = new BufferedReader(new FileReader(file));
+            return new File(fr.readLine());
+        }catch(Exception e){
+            return new File(System.getProperty("user.home"));
+        }
+    }
 
     public static String serializeAs(TextArea mainTa, FNodeManager fnm, File projPathFile) {
 
@@ -53,7 +74,7 @@ public class FSerializer {
 
     public static String serialize(TextArea mainTa, FNodeManager fnm, File projPathFile) {
 
-        if(saveFile==null)
+        if (saveFile == null)
             return null;
 
         FSerObject fobj = new FSerObject();

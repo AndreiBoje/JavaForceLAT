@@ -12,7 +12,7 @@ import java.util.HashSet;
 public class FNode {
     GraphicsContext gcFNode;
     public Point2D loc;
-    Integer ID;
+    public Integer ID;
     public String fname,alias;
     public FOptions opts;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
