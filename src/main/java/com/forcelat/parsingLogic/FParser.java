@@ -34,8 +34,12 @@ public class FParser {
         ArrayList<String> rawLines = (ArrayList<String>) Arrays.stream(ta.getText().split("\n")).collect(Collectors.toList());
 
         //reset options b4 parsing
-        for (FNode fn : fnm.FNodeMap.values())
+        for (FNode fn : fnm.FNodeMap.values()) {
             fnm.FNodeMap.get(fn.ID).opts = new FOptions();
+            fnm.FNodeMap.get(fn.ID).alias = null;
+            fnm.FNodeMap.get(fn.ID).isFinal = false;
+            fnm.FNodeMap.get(fn.ID).isStart = false;
+        }
 
         //Parse node placement & options
         try {
@@ -119,6 +123,7 @@ public class FParser {
                                 fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).alias = aliases.get(i);
                             }
                         }
+
                     }
                 }
 

@@ -13,18 +13,18 @@ public class FNode {
     GraphicsContext gcFNode;
     public Point2D loc;
     public Integer ID;
-    public String fname,alias;
+    public String fname, alias;
     public FOptions opts;
     HashSet<Integer> unidConnectionTo = new HashSet<>();
     HashSet<Integer> jprConnectionTo = new HashSet<>();
     HashSet<Integer> bidConnectsWith = new HashSet<>();
     boolean selfConnects = false;
-    boolean isFinal = false;
-    boolean isStart = false;
+    public boolean isFinal = false;
+    public boolean isStart = false;
 
     public FNode(GraphicsContext gcFNode, Point2D location, int ID, String fname, FOptions opts) {
         this.gcFNode = gcFNode;
-        this.loc = location; //CHANGE THIS HARDCODED THING LATER
+        this.loc = location;
         this.ID = ID;
         this.fname = fname;
         this.opts = opts;
@@ -61,6 +61,5 @@ public class FNode {
             gcFNode.fillOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
         else
             gcFNode.strokeOval(loc.getX() - opts.fNodeRadius, loc.getY() - opts.fNodeRadius, opts.fNodeRadius * 2, opts.fNodeRadius * 2);
-
     }
 }
