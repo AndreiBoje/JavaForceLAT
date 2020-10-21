@@ -50,10 +50,10 @@ public class FSerializer {
 
         FSerObject fobj = new FSerObject();
         fobj.textData = mainTa.getText();
-        fobj.IDGiver = 0;
+        fobj.IDGiver = fnm.FNodeIDGiver;
         int i = 0;
         for (FNode fn : fnm.FNodeMap.values()) {
-            fobj.FNodeMapLoc.put(i, new FPoint2D(fn.loc.getX(), fn.loc.getY()));
+            fobj.FNodeMapLoc.put(fn.ID, new FPoint2D(fn.loc.getX(), fn.loc.getY()));
             i++;
         }
         fobj.canvasH = (int) fnm.gc.getCanvas().getHeight();
@@ -79,12 +79,17 @@ public class FSerializer {
 
         FSerObject fobj = new FSerObject();
         fobj.textData = mainTa.getText();
-        fobj.IDGiver = 0;
+        //fobj.IDGiver = 0;
+        fobj.IDGiver = fnm.FNodeIDGiver;
         int i = 0;
         for (FNode fn : fnm.FNodeMap.values()) {
-            fobj.FNodeMapLoc.put(i, new FPoint2D(fn.loc.getX(), fn.loc.getY()));
+
+            fobj.FNodeMapLoc.put(fn.ID, new FPoint2D(fn.loc.getX(), fn.loc.getY()));
+            //fobj.FNodeMapLoc.put(i, new FPoint2D(fn.loc.getX(), fn.loc.getY()));
+
             i++;
         }
+        System.out.println();
         fobj.canvasH = (int) fnm.gc.getCanvas().getHeight();
         fobj.canvasW = (int) fnm.gc.getCanvas().getWidth();
 
@@ -122,7 +127,9 @@ public class FSerializer {
 
             for (Integer ID : fobj.FNodeMapLoc.keySet()) {
                 FOptions opts = new FOptions();
+                System.out.println(ID.toString());
                 fnm.addFNode(fobj.FNodeMapLoc.get(ID).x, fobj.FNodeMapLoc.get(ID).y, ID.toString(), opts);
+
             }
             ta.setText(fobj.textData);
             fnm.display();

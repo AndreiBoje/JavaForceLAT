@@ -119,8 +119,8 @@ public class FParser {
                         }
 
                         for (int i = 0; i < argsNo; i++) {
-                            if (fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))) != null) {
-                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).alias = aliases.get(i);
+                            if (fnm.FNodeMap.get(fnm.getFNodeIDByTxt2(IDs.get(i))) != null) {
+                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt2(IDs.get(i))).alias = aliases.get(i);
                             }
                         }
 

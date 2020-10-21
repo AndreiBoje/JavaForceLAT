@@ -167,6 +167,12 @@ public class FNodeManager {
                 return fn.ID;
         return -1;
     }
+    public int getFNodeIDByTxt2(String txt) {
+        for (FNode fn : FNodeMap.values())
+            if (fn.fname.equals(txt))
+                return fn.ID;
+        return -1;
+    }
 
     public void makeFinal(String textRef) {
         FNode fn = FNodeMap.get(getFNodeIDByTxt(textRef));
