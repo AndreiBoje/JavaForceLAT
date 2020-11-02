@@ -8,7 +8,7 @@ import java.io.Serializable;
 //Options and defaults for FNodes //No required params are here
 public class FOptions implements Serializable {
     //FNodes
-    public String fNodeAlias=null;
+    public boolean fNodeShowName=true;
     public double fNodeRadius = 30;
     public double fNodeSmallRadius = 0.8 * fNodeRadius;
     public Color fNodeColor = Color.BLACK;

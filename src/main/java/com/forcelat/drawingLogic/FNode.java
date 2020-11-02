@@ -36,7 +36,9 @@ public class FNode {
             gcFNode.setFont(new Font("Calibri", opts.fNodeTextSize));
             gcFNode.setTextAlign(TextAlignment.CENTER);
             gcFNode.setTextBaseline(VPos.CENTER);
-            gcFNode.fillText(alias != null ? alias : fname, loc.getX(), loc.getY());
+            if (opts.fNodeShowName)
+                gcFNode.fillText(fname, loc.getX(), loc.getY() - opts.fNodeRadius * 1.5f);
+            gcFNode.fillText(alias == null ? fname : alias, loc.getX(), loc.getY());
         }
 
         if (isFinal) {

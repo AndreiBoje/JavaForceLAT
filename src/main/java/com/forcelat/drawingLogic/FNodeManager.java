@@ -1,6 +1,7 @@
 package com.forcelat.drawingLogic;
 
 import com.forcelat.parsingLogic.FOptions;
+import com.forcelat.parsingLogic.FParser;
 import com.forcelat.uiLogic.FSaveSense;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
@@ -41,7 +42,7 @@ public class FNodeManager {
         display();
     }
 
-    public void initInteractivity() {
+    public void initInteractivity(FParser fp) {
         //SHIFT + DRAG = MOVE VIEW AREA
         sp.setOnKeyPressed(e -> {
             if (e.isShiftDown()) {
@@ -67,7 +68,6 @@ public class FNodeManager {
                 while (j % dragStep != 0)
                     j++;
                 addFNode(i, j, FNodeIDGiver.toString(), opts);
-                display();
                 FSaveSense.changed();
             }
             //CTRL+ RMB = DELETE NODE THERE
@@ -80,12 +80,13 @@ public class FNodeManager {
                     double dist = cursorLoc.distance(fn.loc);
                     if (dist <= searchRadius) {
                         FNodeMap.remove(fn.ID);
-                        display();
                         break;
                     }
                 }
                 FSaveSense.changed();
             }
+            fp.loopFParse();
+            display();
         });
 
         //LMB = MOVE SELECTED NODE

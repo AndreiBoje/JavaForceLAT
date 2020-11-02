@@ -69,7 +69,7 @@ public class Main extends Application {
 
         FNodeManager fnm = new FNodeManager(mainCanvas.getGraphicsContext2D(), mainSP);
         FParser fp = new FParser(mainTA, fnm);
-        fnm.initInteractivity();
+        fnm.initInteractivity(null);
         fp.beginFParse();
 
         //MENU LISTENERS

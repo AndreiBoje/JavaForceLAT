@@ -22,18 +22,18 @@ public class FParser {
     }
 
     public void beginFParse() {
-        fnm.initInteractivity();
+        fnm.initInteractivity(this);
         ta.textProperty().addListener(e -> {
             loopFParse();
             FSaveSense.changed();
         });
     }
 
-    private void loopFParse() throws IndexOutOfBoundsException {
+    public void loopFParse() throws IndexOutOfBoundsException {
 
         ArrayList<String> rawLines = (ArrayList<String>) Arrays.stream(ta.getText().split("\n")).collect(Collectors.toList());
 
-        //reset options b4 parsing
+        //reset some non-options b4 parsing
         for (FNode fn : fnm.FNodeMap.values()) {
             fnm.FNodeMap.get(fn.ID).opts = new FOptions();
             fnm.FNodeMap.get(fn.ID).alias = null;
@@ -82,8 +82,8 @@ public class FParser {
 
                         try {
                             for (int i = 0; i < argsNo; i++) {
-                                FNode fn = fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i)));
-                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt(IDs.get(i))).opts = opts;
+                                FNode fn = fnm.FNodeMap.get(fnm.getFNodeIDByTxt2(IDs.get(i)));
+                                fnm.FNodeMap.get(fnm.getFNodeIDByTxt2(IDs.get(i))).opts = opts;
 
                             }
                         } catch (NullPointerException e) {
@@ -155,7 +155,7 @@ public class FParser {
                             argsNo = names.length;
                             if (argsNo >= 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(names[i]));
+                                    IDs.add(fnm.getFNodeIDByTxt2(names[i]));
                         } catch (IndexOutOfBoundsException e) {
                         }
 
@@ -198,7 +198,7 @@ public class FParser {
                             argsNo = names.length;
                             if (argsNo >= 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(names[i]));
+                                    IDs.add(fnm.getFNodeIDByTxt2(names[i]));
                         } catch (IndexOutOfBoundsException e) {
                         }
 
@@ -247,7 +247,7 @@ public class FParser {
 
                             if (argsNo == 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(lineData.get(namesIndex).split(",")[i]));
+                                    IDs.add(fnm.getFNodeIDByTxt2(lineData.get(namesIndex).split(",")[i]));
 
                         } catch (IndexOutOfBoundsException e) {
                         }
@@ -286,7 +286,7 @@ public class FParser {
                             argsNo = names.length;
                             if (argsNo >= 2)
                                 for (int i = 0; i < argsNo; i++)
-                                    IDs.add(fnm.getFNodeIDByTxt(names[i]));
+                                    IDs.add(fnm.getFNodeIDByTxt2(names[i]));
                         } catch (IndexOutOfBoundsException e) {
                         }
 
@@ -320,7 +320,7 @@ public class FParser {
                         int txtIndex = lineData.indexOf("-text") + 1;
 
                         //parse args
-                        int ID = fnm.getFNodeIDByTxt(lineData.get(nodeIndex));
+                        int ID = fnm.getFNodeIDByTxt2(lineData.get(nodeIndex));
                         String txt = "";
 
                         if (lineData.contains("-text"))
@@ -443,7 +443,15 @@ public class FParser {
                 fNodeFill = true;
         } catch (Exception e) {
         }
+        //fnode show node index
+        boolean fNodeShowName = opts.fNodeShowName;
+        try {
+            if (lineData.contains("-noindex"))
+                fNodeShowName = false;
+        } catch (Exception e) {
+        }
 
+        opts.fNodeShowName = fNodeShowName;
         opts.fNodeFill = fNodeFill;
         opts.fNodeShowText = fNodeShowText;
         opts.fNodeWidth = fNodeWidth;
