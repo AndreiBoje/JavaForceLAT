@@ -4,7 +4,7 @@ state machine diagrams so there are more features helping with that.
 
 ## How to run it
 Clone this repo into your IDE (preferably InteliJ IDEA) and run the `build.gradle` file then run the project.
-Alternatively,if you don't want to build it from source yourself,you can use the executable provided in the **build** folder.
+Alternatively,if you don't want to build it from source yourself,you can use the executable provided in the **releases** section.
 
 ## Usage & GUI Overview
 The GUI is mainly divided in 2 parts (the canvas and the command line area) and a common menu options bar at the top.The `canvas` is situated 
