@@ -26,7 +26,7 @@ at the left and the `command line area` at the right.<br/> Commands will be pars
 * Commands & Usage
 ### `dragstep`
 Description: *Adjust the snap factor of a node when dragging it.*<br/>
-Command schema:`dragstep  <value>*` <br/>
+Command schema:`dragstep  <value>` <br/>
 Available options: no specific options <br/>
 Examples: <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `dragstep 20` <br/>
