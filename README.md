@@ -29,14 +29,7 @@ Description: *Adjust the snap factor of a node when dragging it.*<br/>
 Command schema:`dragstep  <value>` <br/>
 Available options: no specific options <br/>
 Examples: <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `dragstep 20` <br/>
-### `final`
-Description: *Mark a list of nodes as being the final nodes of a finite state machine.*<br/>
-Command schema:`final -nodes <list of nodes separated by comma>` <br/>
-Available options: no specific options <br/>
-Examples: <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `final -node 0` <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. `final -node 4,2,1` <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `dragstep 20` <br/> <- this will snap the node at every 20px
 ### `opts`
 Description: *Assign custom options to a node or a list of nodes. `opts` can have multiple options chained together separated by spaces.* <br/>
 Command schema:`opts -nodes <list of nodes separated by comma> ( -<option name> <option args> )*` <br/>
