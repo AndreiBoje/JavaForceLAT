@@ -29,7 +29,8 @@ Description: *Adjust the snap factor of a node when dragging it.*<br/>
 Command schema:`dragstep  <value>` <br/>
 Available options: no specific options <br/>
 Examples: <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `dragstep 20` <br/> <- this will snap the node at every 20px
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. `dragstep 20` **<- this will snap the node at every 20px** <br/>
+
 ### `opts`
 Description: *Assign custom options to a node or a list of nodes. `opts` can have multiple options chained together separated by spaces.* <br/>
 Command schema:`opts -nodes <list of nodes separated by comma> ( -<option name> <option args> )*` <br/>
