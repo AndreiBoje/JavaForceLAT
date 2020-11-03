@@ -50,7 +50,7 @@ Examples: <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2. `opts -nodes 0,3,1,2 -width 2.1 -notext` <br/>
 ### `alias`
 Description: *Assign an alias to a node or a list of nodes (change the text displayed in the node).By default,
-each node is alised using it's index identifier.The number of `nodes` provided should be equal to the number of `aliases` to be specified* <br/>
+each node is aliased using it's index identifier.The number of `nodes` provided should be equal to the number of `aliases` to be specified.* <br/>
 Command schema:`alias -nodes <list of nodes separated by comma> -text <list of aliases separated by comma>` <br/>
 Available options: no specific options. <br/>
 Examples: <br/>
