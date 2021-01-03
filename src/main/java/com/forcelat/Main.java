@@ -33,7 +33,7 @@ public class Main extends Application {
     File projectPathFile = new File(System.getProperty("user.home")); //by default
 
     @Override
-    public void start(Stage window) throws Exception {
+    public void start(Stage window) {
 
         //MAIN UI INIT
         TextArea mainTA = new TextArea();
@@ -123,7 +123,7 @@ public class Main extends Application {
         projectPathFile = FSerializer.getLastProjectPath();
 
         //CHANGED SENSE
-        FSaveSense.window=window;
+        FSaveSense.window = window;
         //INIT WINDOW AND SCENE
         Scene scene = new Scene(mainVB, width, height);
 

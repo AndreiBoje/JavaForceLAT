@@ -3,10 +3,8 @@ package com.forcelat.parsingLogic;
 import com.forcelat.drawingLogic.FNode;
 import com.forcelat.drawingLogic.FNodeManager;
 import com.forcelat.uiLogic.FSaveSense;
-import javafx.geometry.Point2D;
 import javafx.scene.control.TextArea;
 import javafx.scene.paint.Color;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
