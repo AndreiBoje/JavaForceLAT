@@ -121,6 +121,7 @@ public class Main extends Application {
 
         //SET PROJECT FOLDER TO BE THE LAST IT WAS USED
         projectPathFile = FSerializer.getLastProjectPath();
+        System.out.println(projectPathFile);
 
         //CHANGED SENSE
         FSaveSense.window = window;

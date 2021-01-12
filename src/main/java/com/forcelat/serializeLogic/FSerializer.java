@@ -25,16 +25,25 @@ public class FSerializer {
                 FileWriter fw = new FileWriter(file);
                 fw.write(projPath);
                 fw.close();
+            }else{
+                FileWriter fw = new FileWriter(file);
+                fw.write(projPath);
+                fw.close();
             }
         } catch (IOException e) {
         }
     }
-    public static File getLastProjectPath(){
-        try{
+
+    public static File getLastProjectPath() {
+        try {
             File file = new File("config.txt");
             BufferedReader fr = new BufferedReader(new FileReader(file));
-            return new File(fr.readLine());
-        }catch(Exception e){
+
+            File file2 = new File(fr.readLine());
+            if (file2.isDirectory())
+                return file2;
+            else throw new Exception("EX");
+        } catch (Exception e) {
             return new File(System.getProperty("user.home"));
         }
     }
